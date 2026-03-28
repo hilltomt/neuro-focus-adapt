@@ -7,6 +7,24 @@ const corsHeaders = {
 
 const DUST_API_URL = "https://dust.tt/api/v1";
 
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
+  let delay = 2000;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(url, options);
+    if (res.status === 429 && attempt < maxRetries) {
+      const retryAfter = res.headers.get('retry-after');
+      const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : delay;
+      console.warn(`Rate limited (429). Retrying in ${waitMs}ms (attempt ${attempt + 1}/${maxRetries})`);
+      await res.text(); // consume body
+      await new Promise(r => setTimeout(r, waitMs));
+      delay *= 2;
+      continue;
+    }
+    return res;
+  }
+  throw new Error('Max retries exceeded');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -40,6 +58,15 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     };
 
+    const messageContext = {
+      timezone: 'Europe/Stockholm',
+      username: 'student',
+      profilePictureUrl: null,
+      fullName: 'Student',
+      email: null,
+      origin: 'api',
+    };
+
     let convId = conversationId;
 
     // Create a new conversation if none exists
@@ -48,27 +75,23 @@ serve(async (req) => {
         ? `[Context: The student is working on "${context}". Help them with this specific task.]`
         : '';
 
-      const createRes = await fetch(`${DUST_API_URL}/w/${DUST_WORKSPACE_ID}/assistant/conversations`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          title: context || 'Study Session',
-          visibility: 'unlisted',
-          message: {
-            content: contextMessage ? `${contextMessage}\n\n${message}` : message,
-            mentions: [{ configurationId: 'NeuroStudyBuddy' }],
-            context: {
-              timezone: 'Europe/Stockholm',
-              username: 'student',
-              profilePictureUrl: null,
-              fullName: 'Student',
-              email: null,
-              origin: 'api',
+      const createRes = await fetchWithRetry(
+        `${DUST_API_URL}/w/${DUST_WORKSPACE_ID}/assistant/conversations`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            title: context || 'Study Session',
+            visibility: 'unlisted',
+            message: {
+              content: contextMessage ? `${contextMessage}\n\n${message}` : message,
+              mentions: [{ configurationId: 'NeuroStudyBuddy' }],
+              context: messageContext,
             },
-          },
-          blocking: true,
-        }),
-      });
+            blocking: true,
+          }),
+        }
+      );
 
       if (!createRes.ok) {
         const errBody = await createRes.text();
@@ -79,23 +102,19 @@ serve(async (req) => {
       const createData = await createRes.json();
       convId = createData.conversation?.sId;
 
-      // Extract the agent reply from the conversation
       const agentMessage = createData.conversation?.content
         ?.flat()
         ?.find((m: any) => m.type === 'agent_message');
 
       const reply = agentMessage?.content || "I'm here to help! What would you like to work on?";
 
-      return new Response(JSON.stringify({
-        reply,
-        conversationId: convId,
-      }), {
+      return new Response(JSON.stringify({ reply, conversationId: convId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     // Post message to existing conversation
-    const msgRes = await fetch(
+    const msgRes = await fetchWithRetry(
       `${DUST_API_URL}/w/${DUST_WORKSPACE_ID}/assistant/conversations/${convId}/messages`,
       {
         method: 'POST',
@@ -103,14 +122,7 @@ serve(async (req) => {
         body: JSON.stringify({
           content: message,
           mentions: [{ configurationId: 'NeuroStudyBuddy' }],
-          context: {
-            timezone: 'Europe/Stockholm',
-            username: 'student',
-            profilePictureUrl: null,
-            fullName: 'Student',
-            email: null,
-            origin: 'api',
-          },
+          context: messageContext,
           blocking: true,
         }),
       }
@@ -122,12 +134,12 @@ serve(async (req) => {
       throw new Error(`Dust API error: ${msgRes.status}`);
     }
 
-    const msgData = await msgRes.json();
+    await msgRes.text(); // consume body
 
-    // After posting, fetch the conversation to get the latest agent reply
-    const convRes = await fetch(
+    // Fetch the conversation to get the latest agent reply
+    const convRes = await fetchWithRetry(
       `${DUST_API_URL}/w/${DUST_WORKSPACE_ID}/assistant/conversations/${convId}`,
-      { headers }
+      { method: 'GET', headers }
     );
 
     if (!convRes.ok) {
@@ -142,16 +154,23 @@ serve(async (req) => {
 
     const reply = lastAgentMsg?.content || "Let me think about that...";
 
-    return new Response(JSON.stringify({
-      reply,
-      conversationId: convId,
-    }), {
+    return new Response(JSON.stringify({ reply, conversationId: convId }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Dust chat error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // Return a friendly message for rate limits
+    if (errorMessage.includes('429') || errorMessage.includes('Max retries')) {
+      return new Response(JSON.stringify({
+        error: 'The AI assistant is busy right now. Please wait a moment and try again.',
+      }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
