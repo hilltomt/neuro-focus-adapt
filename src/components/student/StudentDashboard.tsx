@@ -96,7 +96,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
           {todayMissions.map((mission) => (
             <div
               key={mission.id}
-              onClick={() => navigate(`/assistant?task=${encodeURIComponent(mission.title)}`)}
+              onClick={() => navigate(`/subject/${encodeURIComponent(mission.subject)}`)}
               className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
                 mission.done
                   ? "bg-primary/5 border-primary/20 opacity-70"
