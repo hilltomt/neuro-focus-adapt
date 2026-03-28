@@ -253,26 +253,25 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
   };
 
   const handleStepClick = async (stepId: string) => {
-    let clickedStep: Step | undefined;
-    let newStatus: "default" | "active" | "completed" = "default";
+    // Determine current status of clicked step
+    const currentStep = steps.find((s) => s.id === stepId);
+    if (!currentStep) return;
+
+    const nextStatus: "default" | "active" | "completed" =
+      currentStep.status === "default" ? "active" :
+      currentStep.status === "active" ? "completed" : "default";
 
     setSteps((prev) => {
-      const updated = prev.map((s) => {
-        if (s.id === stepId) {
-          if (s.status === "default") { newStatus = "active"; return { ...s, status: "active" as const }; }
-          if (s.status === "active") { newStatus = "completed"; return { ...s, status: "completed" as const }; }
-          newStatus = "default"; return { ...s, status: "default" as const };
-        }
-        return s;
-      });
-      clickedStep = updated.find((s) => s.id === stepId);
+      const updated = prev.map((s) =>
+        s.id === stepId ? { ...s, status: nextStatus } : s
+      );
       saveBoardSteps(taskId, updated);
       return updated;
     });
 
     // When a step becomes active, ask the AI for guidance on it
-    if (newStatus === "active" && clickedStep) {
-      const prompt = `The student just started working on this step: "${clickedStep.title}" — ${clickedStep.description}. Give them a brief, encouraging explanation of how to approach this step for the assignment "${taskTitle}". Be concise and helpful.`;
+    if (nextStatus === "active") {
+      const prompt = `The student just started working on this step: "${currentStep.title}" — ${currentStep.description}. Give them a brief, encouraging explanation of how to approach this step for the assignment "${taskTitle}". Be concise and helpful.`;
       const reply = await sendMessageToDust(prompt);
       const aiMsg: ChatMessage = { id: `ai-step-${Date.now()}`, role: "ai", text: reply };
       setMessages((prev) => {
