@@ -11,11 +11,11 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import StudySessionBoard from "@/components/assistant/StudySessionBoard";
 
-const ongoingTasks = [
-  { id: "fractions", title: "Math: Fractions Worksheet", active: true },
-  { id: "vikings", title: "History: Viking Essay", active: false },
-  { id: "science", title: "Science Quiz", active: false },
-  { id: "reading", title: "English: Reading Comprehension", active: false },
+const defaultTasks = [
+  { id: "fractions", title: "Math: Fractions Worksheet" },
+  { id: "vikings", title: "History: Viking Essay" },
+  { id: "science", title: "Science Quiz" },
+  { id: "reading", title: "English: Reading Comprehension" },
 ];
 
 const Assistant = () => {
