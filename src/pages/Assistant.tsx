@@ -31,6 +31,8 @@ interface OngoingTask {
 }
 
 const STORAGE_KEY = "neuro_ongoing_tasks";
+const MESSAGES_STORAGE_KEY = "neuro_task_messages";
+const CONVOS_STORAGE_KEY = "neuro_task_conversations";
 
 const loadTasksFromStorage = (): OngoingTask[] => {
   try {
@@ -42,6 +44,30 @@ const loadTasksFromStorage = (): OngoingTask[] => {
 
 const saveTasksToStorage = (tasks: OngoingTask[]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+};
+
+const loadMessagesByTask = (): Record<string, ChatMessage[]> => {
+  try {
+    const raw = localStorage.getItem(MESSAGES_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+};
+
+const saveMessagesByTask = (messagesByTask: Record<string, ChatMessage[]>) => {
+  localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messagesByTask));
+};
+
+const loadConversationIds = (): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem(CONVOS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+};
+
+const saveConversationIds = (convos: Record<string, string>) => {
+  localStorage.setItem(CONVOS_STORAGE_KEY, JSON.stringify(convos));
 };
 
 const Assistant = () => {
@@ -68,12 +94,14 @@ const Assistant = () => {
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messagesByTask, setMessagesByTask] = useState<Record<string, ChatMessage[]>>(loadMessagesByTask);
+  const [conversationIds, setConversationIds] = useState<Record<string, string>>(loadConversationIds);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentTaskTitle = activeTask?.title ?? taskTitle;
+  const currentMessages = activeTaskId ? (messagesByTask[activeTaskId] || []) : [];
+  const currentConversationId = activeTaskId ? (conversationIds[activeTaskId] || null) : null;
 
   const greeting = currentTaskTitle
     ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
@@ -81,29 +109,45 @@ const Assistant = () => {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [currentMessages]);
+
+  const updateTaskMessages = (taskId: string, updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+    setMessagesByTask((prev) => {
+      const updated = { ...prev, [taskId]: updater(prev[taskId] || []) };
+      saveMessagesByTask(updated);
+      return updated;
+    });
+  };
+
+  const updateConversationId = (taskId: string, convId: string) => {
+    setConversationIds((prev) => {
+      const updated = { ...prev, [taskId]: convId };
+      saveConversationIds(updated);
+      return updated;
+    });
+  };
 
   const handleSendMainChat = async () => {
     const text = chatInput.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || !activeTaskId) return;
 
     const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    updateTaskMessages(activeTaskId, (prev) => [...prev, userMsg]);
     setChatInput("");
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('dust-chat', {
-        body: { message: text, conversationId, context: currentTaskTitle },
+        body: { message: text, conversationId: currentConversationId, context: currentTaskTitle, taskId: activeTaskId },
       });
       if (error) throw error;
-      if (data?.conversationId) setConversationId(data.conversationId);
+      if (data?.conversationId) updateConversationId(activeTaskId, data.conversationId);
       const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: data?.reply || "Let me think about that..." };
-      setMessages((prev) => [...prev, aiMsg]);
+      updateTaskMessages(activeTaskId, (prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error('Chat error:', err);
       const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: "Sorry, I had trouble connecting. Please try again! 🔄" };
-      setMessages((prev) => [...prev, aiMsg]);
+      updateTaskMessages(activeTaskId, (prev) => [...prev, aiMsg]);
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +178,17 @@ const Assistant = () => {
     const updated = ongoingTasks.filter((t) => t.id !== taskId);
     setOngoingTasks(updated);
     saveTasksToStorage(updated);
+    // Clean up task-specific messages and conversation
+    setMessagesByTask((prev) => {
+      const { [taskId]: _, ...rest } = prev;
+      saveMessagesByTask(rest);
+      return rest;
+    });
+    setConversationIds((prev) => {
+      const { [taskId]: _, ...rest } = prev;
+      saveConversationIds(rest);
+      return rest;
+    });
     if (activeTaskId === taskId) {
       if (updated.length > 0) {
         handleSwitchTask(updated[0].id);
@@ -236,6 +291,7 @@ const Assistant = () => {
               {showRoadmap ? (
                 <StudySessionBoard
                   taskTitle={currentTaskTitle || "Study Session"}
+                  taskId={activeTaskId}
                   onBack={() => setShowRoadmap(false)}
                 />
               ) : (
@@ -290,7 +346,7 @@ const Assistant = () => {
                     </div>
 
                     {/* Chat messages */}
-                    {messages.map((msg) => (
+                    {currentMessages.map((msg) => (
                       <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
                         {msg.role === "ai" && (
                           <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">

@@ -20,6 +20,7 @@ interface ChatMessage {
 
 interface StudySessionBoardProps {
   taskTitle: string;
+  taskId: string;
   onBack: () => void;
 }
 
@@ -46,12 +47,49 @@ const generateSteps = (taskTitle: string): Step[] => {
   ];
 };
 
-const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
+const BOARD_MESSAGES_KEY = "neuro_board_messages";
+const BOARD_CONVOS_KEY = "neuro_board_conversations";
+
+const loadBoardMessages = (taskId: string): ChatMessage[] => {
+  try {
+    const raw = localStorage.getItem(BOARD_MESSAGES_KEY);
+    if (raw) { const all = JSON.parse(raw); return all[taskId] || []; }
+  } catch {}
+  return [];
+};
+
+const saveBoardMessages = (taskId: string, msgs: ChatMessage[]) => {
+  try {
+    const raw = localStorage.getItem(BOARD_MESSAGES_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    all[taskId] = msgs;
+    localStorage.setItem(BOARD_MESSAGES_KEY, JSON.stringify(all));
+  } catch {}
+};
+
+const loadBoardConvoId = (taskId: string): string | null => {
+  try {
+    const raw = localStorage.getItem(BOARD_CONVOS_KEY);
+    if (raw) { const all = JSON.parse(raw); return all[taskId] || null; }
+  } catch {}
+  return null;
+};
+
+const saveBoardConvoId = (taskId: string, convId: string) => {
+  try {
+    const raw = localStorage.getItem(BOARD_CONVOS_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    all[taskId] = convId;
+    localStorage.setItem(BOARD_CONVOS_KEY, JSON.stringify(all));
+  } catch {}
+};
+
+const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps) => {
   const [steps, setSteps] = useState<Step[]>(() => generateSteps(taskTitle));
   const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadBoardMessages(taskId));
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(() => loadBoardConvoId(taskId));
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const completedCount = steps.filter((s) => s.status === "completed").length;
@@ -69,6 +107,7 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
           message: text,
           conversationId,
           context: taskTitle,
+          taskId,
         },
       });
 
@@ -76,6 +115,7 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
 
       if (data?.conversationId) {
         setConversationId(data.conversationId);
+        saveBoardConvoId(taskId, data.conversationId);
       }
 
       return data?.reply || "I'm thinking... could you try again?";
@@ -85,19 +125,27 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, taskTitle]);
+  }, [conversationId, taskTitle, taskId]);
 
   const handleSendMessage = async () => {
     const text = chatInput.trim();
     if (!text || isLoading) return;
 
     const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => {
+      const updated = [...prev, userMsg];
+      saveBoardMessages(taskId, updated);
+      return updated;
+    });
     setChatInput("");
 
     const reply = await sendMessageToDust(text);
     const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: reply };
-    setMessages((prev) => [...prev, aiMsg]);
+    setMessages((prev) => {
+      const updated = [...prev, aiMsg];
+      saveBoardMessages(taskId, updated);
+      return updated;
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
