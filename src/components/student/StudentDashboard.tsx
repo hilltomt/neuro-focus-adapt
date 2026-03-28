@@ -10,10 +10,19 @@ interface StudentDashboardProps {
   onSectionChange: (section: string) => void;
 }
 
-const todayMissions = [
-  { id: 1, title: "Read Chapter 5 — Biology", subject: "Biology", time: "15 min", done: false },
-  { id: 2, title: "Math worksheet: Fractions", subject: "Mathematics", time: "10 min", done: true },
-  { id: 3, title: "Write 3 sentences — English", subject: "English", time: "8 min", done: false },
+interface Mission {
+  id: string;
+  title: string;
+  subject: string;
+  time: string;
+  done: boolean;
+  adapted_content?: string | null;
+}
+
+const defaultMissions: Mission[] = [
+  { id: "default-1", title: "Read Chapter 5 — Biology", subject: "Biology", time: "15 min", done: false },
+  { id: "default-2", title: "Math worksheet: Fractions", subject: "Mathematics", time: "10 min", done: true },
+  { id: "default-3", title: "Write 3 sentences — English", subject: "English", time: "8 min", done: false },
 ];
 
 const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
@@ -21,16 +30,30 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const [adaptationCount, setAdaptationCount] = useState(0);
+  const [missions, setMissions] = useState<Mission[]>(defaultMissions);
 
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
-      const [profileRes, countRes] = await Promise.all([
+      const [profileRes, countRes, missionsRes] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("user_id", user.id).single(),
         supabase.from("adaptations").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("student_missions").select("*").eq("student_identifier", "lucas").order("created_at", { ascending: false }),
       ]);
       if (profileRes.data) setProfile(profileRes.data);
       if (countRes.count !== null) setAdaptationCount(countRes.count);
+
+      if (missionsRes.data && missionsRes.data.length > 0) {
+        const dbMissions: Mission[] = missionsRes.data.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          subject: m.subject,
+          time: m.estimated_time || "15 min",
+          done: m.done,
+          adapted_content: m.adapted_content,
+        }));
+        setMissions([...dbMissions, ...defaultMissions]);
+      }
     };
     fetchData();
   }, [user]);
@@ -39,7 +62,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
     ? `Hey, ${profile.full_name.split(" ")[0]}! 👋`
     : "Hey there! 👋";
 
-  const completedMissions = todayMissions.filter((m) => m.done).length;
+  const completedMissions = missions.filter((m) => m.done).length;
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -54,7 +77,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4 text-center">
             <Target className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">{completedMissions}/{todayMissions.length}</p>
+            <p className="text-2xl font-bold text-foreground">{completedMissions}/{missions.length}</p>
             <p className="text-xs text-muted-foreground">Today's Missions</p>
           </CardContent>
         </Card>
@@ -89,11 +112,11 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
               <Target className="h-4 w-4 text-primary" />
               Today's Missions
             </span>
-            <span className="text-xs font-normal text-muted-foreground">{completedMissions} of {todayMissions.length} done</span>
+            <span className="text-xs font-normal text-muted-foreground">{completedMissions} of {missions.length} done</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {todayMissions.map((mission) => (
+          {missions.map((mission) => (
             <div
               key={mission.id}
               onClick={() => navigate(`/subject/${encodeURIComponent(mission.subject)}`)}

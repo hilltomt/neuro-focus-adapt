@@ -77,6 +77,48 @@ export type Database = {
         }
         Relationships: []
       }
+      student_missions: {
+        Row: {
+          adapted_content: string | null
+          created_at: string
+          description: string | null
+          done: boolean
+          estimated_time: string | null
+          id: string
+          micro_sprints: Json | null
+          student_identifier: string
+          subject: string
+          teacher_user_id: string
+          title: string
+        }
+        Insert: {
+          adapted_content?: string | null
+          created_at?: string
+          description?: string | null
+          done?: boolean
+          estimated_time?: string | null
+          id?: string
+          micro_sprints?: Json | null
+          student_identifier: string
+          subject: string
+          teacher_user_id: string
+          title: string
+        }
+        Update: {
+          adapted_content?: string | null
+          created_at?: string
+          description?: string | null
+          done?: boolean
+          estimated_time?: string | null
+          id?: string
+          micro_sprints?: Json | null
+          student_identifier?: string
+          subject?: string
+          teacher_user_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
