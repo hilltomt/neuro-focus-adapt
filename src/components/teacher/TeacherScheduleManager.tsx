@@ -233,6 +233,7 @@ Return ONLY the JSON, no markdown fences or extra text.`,
     setIsSaving(true);
 
     try {
+      // Save to adaptations table
       const { error } = await supabase.from("adaptations").insert({
         user_id: user.id,
         original_content: lessonText,
@@ -241,6 +242,25 @@ Return ONLY the JSON, no markdown fences or extra text.`,
         title: `${selectedLesson?.subject} — ${selectedLesson?.class} (${selectedLesson?.day})`,
       });
       if (error) throw error;
+
+      // Create missions for each selected student
+      const missions = selectedStudents.map((studentId) => ({
+        student_identifier: studentId,
+        teacher_user_id: user.id,
+        subject: selectedLesson?.subject || "",
+        title: `${selectedLesson?.subject}: ${selectedLesson?.description?.split("—")[0]?.trim() || "Task"}`,
+        description: selectedLesson?.description || "",
+        estimated_time: microSprints.length > 0
+          ? `${microSprints.reduce((sum, s) => sum + parseInt(s.duration) || 0, 0)} min`
+          : "15 min",
+        adapted_content: adaptedContent,
+        micro_sprints: microSprints.length > 0 ? JSON.stringify(microSprints) : null,
+      }));
+
+      const { error: missionsError } = await supabase
+        .from("student_missions")
+        .insert(missions);
+      if (missionsError) throw missionsError;
 
       const studentNames = selectedStudents
         .map((id) => mockStudents.find((s) => s.id === id)?.name)
