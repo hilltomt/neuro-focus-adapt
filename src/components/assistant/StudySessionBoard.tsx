@@ -252,19 +252,35 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
     }
   };
 
-  const handleStepClick = (stepId: string) => {
+  const handleStepClick = async (stepId: string) => {
+    let clickedStep: Step | undefined;
+    let newStatus: Step["status"] = "default";
+
     setSteps((prev) => {
       const updated = prev.map((s) => {
         if (s.id === stepId) {
-          if (s.status === "default") return { ...s, status: "active" as const };
-          if (s.status === "active") return { ...s, status: "completed" as const };
-          return { ...s, status: "default" as const };
+          if (s.status === "default") { newStatus = "active"; return { ...s, status: "active" as const }; }
+          if (s.status === "active") { newStatus = "completed"; return { ...s, status: "completed" as const }; }
+          newStatus = "default"; return { ...s, status: "default" as const };
         }
         return s;
       });
+      clickedStep = updated.find((s) => s.id === stepId);
       saveBoardSteps(taskId, updated);
       return updated;
     });
+
+    // When a step becomes active, ask the AI for guidance on it
+    if (newStatus === "active" && clickedStep) {
+      const prompt = `The student just started working on this step: "${clickedStep.title}" — ${clickedStep.description}. Give them a brief, encouraging explanation of how to approach this step for the assignment "${taskTitle}". Be concise and helpful.`;
+      const reply = await sendMessageToDust(prompt);
+      const aiMsg: ChatMessage = { id: `ai-step-${Date.now()}`, role: "ai", text: reply };
+      setMessages((prev) => {
+        const updated = [...prev, aiMsg];
+        saveBoardMessages(taskId, updated);
+        return updated;
+      });
+    }
   };
 
   const activeStep = steps.find((s) => s.status === "active");
