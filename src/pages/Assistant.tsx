@@ -2,8 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
-  ListChecks, BookOpen, HelpCircle, MessageSquare,
+  ListChecks, BookOpen, HelpCircle, MessageSquare, MoreVertical, Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -75,6 +81,20 @@ const Assistant = () => {
     }
   };
 
+  const handleRemoveTask = (taskId: string) => {
+    const updated = ongoingTasks.filter((t) => t.id !== taskId);
+    setOngoingTasks(updated);
+    saveTasksToStorage(updated);
+    if (activeTaskId === taskId) {
+      if (updated.length > 0) {
+        handleSwitchTask(updated[0].id);
+      } else {
+        setActiveTaskId("");
+        navigate("/assistant", { replace: true });
+      }
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -116,17 +136,45 @@ const Assistant = () => {
                     <p className="text-xs text-muted-foreground/60 px-3 py-2">No tasks yet. Launch one from My Subjects.</p>
                   ) : (
                     ongoingTasks.map((task) => (
-                      <button
+                      <div
                         key={task.id}
-                        onClick={() => handleSwitchTask(task.id)}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
+                        className={`group flex items-center gap-1 rounded-xl transition-all ${
                           activeTaskId === task.id
-                            ? "bg-primary/10 text-primary font-medium border border-primary/20"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            ? "bg-primary/10 border border-primary/20"
+                            : "hover:bg-muted/50"
                         }`}
                       >
-                        <span className="line-clamp-1">{task.title}</span>
-                      </button>
+                        <button
+                          onClick={() => handleSwitchTask(task.id)}
+                          className={`flex-1 text-left px-3 py-2.5 text-sm min-w-0 ${
+                            activeTaskId === task.id
+                              ? "text-primary font-medium"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <span className="line-clamp-1">{task.title}</span>
+                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mr-1 text-muted-foreground hover:text-foreground"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            <DropdownMenuItem
+                              onClick={() => handleRemoveTask(task.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-2" />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     ))
                   )}
                 </div>
