@@ -110,6 +110,7 @@ const Assistant = () => {
                 </div>
               </div>
             </aside>
+            )}
 
             {/* Right Main Area */}
             <main className="flex-1 flex flex-col min-w-0">
