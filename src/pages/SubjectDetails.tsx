@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Clock, CheckCircle2, CalendarClock, Brain } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock, CheckCircle2, CalendarClock, Brain, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,13 @@ interface Task {
   grade?: string;
   description: string;
   objectives?: string[];
+}
+
+interface LessonFile {
+  id: string;
+  file_name: string;
+  file_url: string;
+  created_at: string;
 }
 
 const mockTasks: Record<string, { current: Task[]; upcoming: Task[]; completed: Task[] }> = {
@@ -80,6 +87,7 @@ const SubjectDetails = () => {
   const { signOut } = useAuth();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [dbTasks, setDbTasks] = useState<Task[]>([]);
+  const [lessonFiles, setLessonFiles] = useState<LessonFile[]>([]);
 
   const displayName = subjectName
     ? subjectName.charAt(0).toUpperCase() + subjectName.slice(1).replace(/-/g, " ")
@@ -87,7 +95,7 @@ const SubjectDetails = () => {
 
   const baseTasks = (subjectName && mockTasks[subjectName.toLowerCase()]) || defaultTasks;
 
-  // Fetch DB missions matching this subject and merge into "current" tasks
+  // Fetch DB missions matching this subject
   useEffect(() => {
     if (!subjectName) return;
     const fetchMissions = async () => {
@@ -98,7 +106,6 @@ const SubjectDetails = () => {
         .eq("done", false)
         .order("created_at", { ascending: false });
       if (data && data.length > 0) {
-        // Deduplicate by title
         const seen = new Set<string>();
         const missions: Task[] = [];
         for (const m of data) {
@@ -116,6 +123,48 @@ const SubjectDetails = () => {
       }
     };
     fetchMissions();
+  }, [subjectName]);
+
+  // Fetch lesson files and subscribe to realtime updates
+  useEffect(() => {
+    if (!subjectName) return;
+
+    const fetchFiles = async () => {
+      const { data } = await supabase
+        .from("lesson_files" as any)
+        .select("*")
+        .ilike("subject", subjectName)
+        .order("created_at", { ascending: false });
+      if (data) setLessonFiles(data as any);
+    };
+    fetchFiles();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel(`lesson-files-${subjectName}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "lesson_files",
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const newFile = payload.new as any;
+            if (newFile.subject?.toLowerCase() === subjectName.toLowerCase()) {
+              setLessonFiles((prev) => [newFile, ...prev]);
+            }
+          } else if (payload.eventType === "DELETE") {
+            setLessonFiles((prev) => prev.filter((f) => f.id !== (payload.old as any).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [subjectName]);
 
   const tasks = {
@@ -249,6 +298,38 @@ const SubjectDetails = () => {
                   ))}
                 </TabsContent>
               </Tabs>
+
+              {/* Lesson Files */}
+              {lessonFiles.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    Lesson Files
+                  </h3>
+                  <div className="space-y-2">
+                    {lessonFiles.map((file) => (
+                      <a
+                        key={file.id}
+                        href={file.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all"
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FileText className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(file.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Download className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </main>
         </div>

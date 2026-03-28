@@ -110,7 +110,7 @@ const TeacherScheduleManager = () => {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !user) return;
+    if (!files || !user || !selectedLesson) return;
 
     setIsUploading(true);
     const newFiles: { name: string; url: string }[] = [];
@@ -129,6 +129,20 @@ const TeacherScheduleManager = () => {
       const { data: urlData } = supabase.storage
         .from("lesson-files")
         .getPublicUrl(filePath);
+
+      // Persist file metadata to lesson_files table
+      const { error: dbError } = await supabase.from("lesson_files" as any).insert({
+        teacher_user_id: user.id,
+        subject: selectedLesson.subject,
+        class: selectedLesson.class,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+      });
+
+      if (dbError) {
+        toast.error(`Failed to save ${file.name} metadata`);
+        continue;
+      }
 
       newFiles.push({ name: file.name, url: urlData.publicUrl });
     }
