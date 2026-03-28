@@ -18,6 +18,7 @@ const todayMissions = [
 
 const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const [adaptationCount, setAdaptationCount] = useState(0);
 
