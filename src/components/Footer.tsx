@@ -22,10 +22,10 @@ const Footer = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-14"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
               The Business Case
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-body">
               This isn't just the right thing to do. It's the smartest investment a municipality can make.
             </p>
           </motion.div>
@@ -38,10 +38,10 @@ const Footer = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.15 }}
-                className="text-center p-6 rounded-2xl border border-border/60 bg-card"
+                className="text-center p-6 rounded-xl border border-border bg-card shadow-sm"
               >
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-3">{stat.value}</div>
-                <p className="text-muted-foreground text-sm leading-relaxed">{stat.description}</p>
+                <div className="text-3xl md:text-4xl font-black font-display text-primary mb-3">{stat.value}</div>
+                <p className="text-muted-foreground text-sm leading-relaxed font-body">{stat.description}</p>
               </motion.div>
             ))}
           </div>
@@ -50,7 +50,7 @@ const Footer = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-muted-foreground text-center max-w-3xl mx-auto leading-relaxed"
+            className="text-muted-foreground text-center max-w-3xl mx-auto leading-relaxed font-body"
           >
             When students with special needs don't get timely support, they become school refusers. 
             Municipalities then face spiralling costs — specialist schools, home tuition, social services 
@@ -69,17 +69,17 @@ const Footer = () => {
             transition={{ duration: 0.6 }}
             className="max-w-2xl mx-auto text-center"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
               Be the first school to use Neuro.
             </h2>
-            <p className="text-muted-foreground text-lg mb-8">
+            <p className="text-muted-foreground text-lg mb-8 font-body">
               We are building Neuro for schools and educators that care. Join the waitlist to get early access.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <Input
                 type="email"
                 placeholder="you@company.com"
-                className="flex-1"
+                className="flex-1 rounded-full px-5"
               />
               <Button size="lg" className="px-8">
                 Join waitlist
@@ -90,13 +90,13 @@ const Footer = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t">
+      <footer className="py-12 border-t border-border">
         <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
-            <span className="font-display text-lg font-bold text-foreground">Neuro</span>
+            <span className="font-display text-lg font-black text-foreground tracking-tight">Neuro</span>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground font-body">
             © 2026 Neuro. All rights reserved.
           </p>
         </div>

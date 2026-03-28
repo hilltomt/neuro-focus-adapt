@@ -1,24 +1,20 @@
 import { motion } from "framer-motion";
-import { GraduationCap, BookOpen, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
   {
-    icon: GraduationCap,
     emoji: "👨‍🏫",
     title: "For Teachers",
     subtitle: "Smart scheduling & student overviews.",
     description: "See every student's level, needs, and achievements at a glance. Spend less time on admin and more time actually teaching.",
   },
   {
-    icon: BookOpen,
     emoji: "🎓",
     title: "For Students",
     subtitle: "A calm, structured school day.",
     description: "Materials, schedules, and feedback — all in one place. No overwhelm. No confusion. Just clarity.",
   },
   {
-    icon: Heart,
     emoji: "❤️",
     title: "For Parents",
     subtitle: "Stay close, without chasing anyone.",
@@ -37,7 +33,7 @@ const Strategies = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
             One platform. For every person who cares about the child.
           </h2>
         </motion.div>
@@ -51,12 +47,12 @@ const Strategies = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <Card className="h-full border-border/60 hover:border-primary/30 hover:shadow-md transition-all duration-300 bg-card">
+              <Card className="h-full border-border hover:border-primary/30 hover:shadow-md transition-all duration-300 bg-card rounded-xl">
                 <CardContent className="p-6">
                   <div className="text-3xl mb-3">{feature.emoji}</div>
-                  <h3 className="font-display text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
-                  <p className="text-primary font-medium text-sm mb-2">{feature.subtitle}</p>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <h3 className="font-display text-lg font-bold text-foreground mb-1">{feature.title}</h3>
+                  <p className="text-primary font-bold text-sm mb-2 font-display">{feature.subtitle}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-body">{feature.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
