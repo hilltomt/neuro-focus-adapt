@@ -46,15 +46,28 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
       if (countRes.count !== null) setAdaptationCount(countRes.count);
 
       if (missionsRes.data && missionsRes.data.length > 0) {
-        const dbMissions: Mission[] = missionsRes.data.map((m: any) => ({
-          id: m.id,
-          title: m.title,
-          subject: m.subject,
-          time: m.estimated_time || "15 min",
-          done: m.done,
-          adapted_content: m.adapted_content,
-        }));
-        setMissions([...dbMissions, ...defaultMissions]);
+        // Deduplicate by title, keeping the newest (first due to order)
+        const seen = new Set<string>();
+        const dbMissions: Mission[] = [];
+        for (const m of missionsRes.data) {
+          if (!seen.has(m.title)) {
+            seen.add(m.title);
+            dbMissions.push({
+              id: m.id,
+              title: m.title,
+              subject: m.subject,
+              time: m.estimated_time || "15 min",
+              done: m.done,
+              adapted_content: m.adapted_content,
+            });
+          }
+        }
+        // Filter out default missions whose subjects overlap with DB missions
+        const dbSubjects = new Set(dbMissions.map((m) => m.subject.toLowerCase()));
+        const filteredDefaults = defaultMissions.filter(
+          (m) => !dbSubjects.has(m.subject.toLowerCase())
+        );
+        setMissions([...dbMissions, ...filteredDefaults]);
         setNewestMissionId(dbMissions[0]?.id || null);
       }
     };
