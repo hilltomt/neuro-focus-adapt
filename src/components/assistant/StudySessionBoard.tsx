@@ -24,31 +24,9 @@ interface StudySessionBoardProps {
   onBack: () => void;
 }
 
-const generateSteps = (taskTitle: string): Step[] => {
-  const lower = taskTitle.toLowerCase();
-  if (lower.includes("fraction")) {
-    return [
-      { id: "1", title: "Simplify 3 Fractions", description: "Reduce fractions to their simplest form using GCD.", status: "default" },
-      { id: "2", title: "Add Unlike Denominators", description: "Find common denominators and add fractions together.", status: "default" },
-      { id: "3", title: "Fraction Word Problem", description: "Apply fraction skills to solve a real-world word problem.", status: "default" },
-    ];
-  }
-  if (lower.includes("viking") || lower.includes("history")) {
-    return [
-      { id: "1", title: "Research Viking Routes", description: "Map out the main Viking exploration routes across Europe.", status: "default" },
-      { id: "2", title: "Write Introduction", description: "Draft the opening paragraph with a strong thesis.", status: "default" },
-      { id: "3", title: "Add Historical Facts", description: "Include at least 3 verified historical facts with sources.", status: "default" },
-    ];
-  }
-  return [
-    { id: "1", title: "Step 1: Review Material", description: "Go through the core concepts one more time.", status: "default" },
-    { id: "2", title: "Step 2: Practice", description: "Complete the practice exercises.", status: "default" },
-    { id: "3", title: "Step 3: Self-Check", description: "Quiz yourself on what you learned.", status: "default" },
-  ];
-};
-
 const BOARD_MESSAGES_KEY = "neuro_board_messages";
 const BOARD_CONVOS_KEY = "neuro_board_conversations";
+const BOARD_STEPS_KEY = "neuro_board_steps";
 
 const loadBoardMessages = (taskId: string): ChatMessage[] => {
   try {
@@ -84,31 +62,150 @@ const saveBoardConvoId = (taskId: string, convId: string) => {
   } catch {}
 };
 
+const loadBoardSteps = (taskId: string): Step[] | null => {
+  try {
+    const raw = localStorage.getItem(BOARD_STEPS_KEY);
+    if (raw) { const all = JSON.parse(raw); return all[taskId] || null; }
+  } catch {}
+  return null;
+};
+
+const saveBoardSteps = (taskId: string, steps: Step[]) => {
+  try {
+    const raw = localStorage.getItem(BOARD_STEPS_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    all[taskId] = steps;
+    localStorage.setItem(BOARD_STEPS_KEY, JSON.stringify(all));
+  } catch {}
+};
+
+const parseStepsFromAIResponse = (text: string): Step[] | null => {
+  try {
+    // Try to find JSON array in the response
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item: any, index: number) => ({
+          id: String(index + 1),
+          title: item.title || `Step ${index + 1}`,
+          description: item.description || "",
+          status: "default" as const,
+        }));
+      }
+    }
+  } catch {}
+  return null;
+};
+
 const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps) => {
-  const [steps, setSteps] = useState<Step[]>(() => generateSteps(taskTitle));
+  const [steps, setSteps] = useState<Step[]>(() => loadBoardSteps(taskId) || []);
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadBoardMessages(taskId));
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingSteps, setIsGeneratingSteps] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(() => loadBoardConvoId(taskId));
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const hasGeneratedRef = useRef(false);
 
   const completedCount = steps.filter((s) => s.status === "completed").length;
-  const progress = Math.round((completedCount / steps.length) * 100);
+  const progress = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Generate steps from AI on first mount (if not already cached)
+  useEffect(() => {
+    if (hasGeneratedRef.current) return;
+    const cachedSteps = loadBoardSteps(taskId);
+    if (cachedSteps && cachedSteps.length > 0) {
+      hasGeneratedRef.current = true;
+      // If no messages yet, add the welcome message
+      if (messages.length === 0) {
+        const welcomeMsg: ChatMessage = {
+          id: `ai-welcome-${Date.now()}`,
+          role: "ai",
+          text: `Hey! 👋 I've prepared a roadmap for tackling **${taskTitle}**. Check out the steps on the right — click any card to start working on it, and I'll be right here to help you along the way! 🚀`,
+        };
+        setMessages([welcomeMsg]);
+        saveBoardMessages(taskId, [welcomeMsg]);
+      }
+      return;
+    }
+
+    hasGeneratedRef.current = true;
+    setIsGeneratingSteps(true);
+
+    const generateStepsFromAI = async () => {
+      try {
+        const prompt = `I need to work on this assignment: "${taskTitle}". Please break it down into 3-5 clear, actionable steps that a student can follow. Return ONLY a JSON array with objects containing "title" and "description" fields. No other text, just the JSON array. Example format: [{"title": "Step title", "description": "Brief description of what to do"}]`;
+
+        const { data, error } = await supabase.functions.invoke('dust-chat', {
+          body: { message: prompt, conversationId: null, context: taskTitle, taskId },
+        });
+
+        if (error) throw error;
+
+        if (data?.conversationId) {
+          setConversationId(data.conversationId);
+          saveBoardConvoId(taskId, data.conversationId);
+        }
+
+        const parsedSteps = parseStepsFromAIResponse(data?.reply || "");
+        if (parsedSteps && parsedSteps.length > 0) {
+          setSteps(parsedSteps);
+          saveBoardSteps(taskId, parsedSteps);
+        } else {
+          // Fallback steps if parsing fails
+          const fallback: Step[] = [
+            { id: "1", title: "Review the requirements", description: "Read through the assignment carefully and identify key objectives.", status: "default" },
+            { id: "2", title: "Research & gather materials", description: "Find relevant resources and take notes on important concepts.", status: "default" },
+            { id: "3", title: "Work through the task", description: "Complete the main body of work step by step.", status: "default" },
+            { id: "4", title: "Review & refine", description: "Check your work, fix any issues, and polish the final result.", status: "default" },
+          ];
+          setSteps(fallback);
+          saveBoardSteps(taskId, fallback);
+        }
+
+        // Add welcome message
+        const welcomeMsg: ChatMessage = {
+          id: `ai-welcome-${Date.now()}`,
+          role: "ai",
+          text: `Hey! 👋 I've prepared a roadmap for tackling **${taskTitle}**. Check out the steps on the right — click any card to start working on it, and I'll be right here to help you along the way! 🚀`,
+        };
+        setMessages([welcomeMsg]);
+        saveBoardMessages(taskId, [welcomeMsg]);
+      } catch (err) {
+        console.error('Failed to generate steps:', err);
+        const fallback: Step[] = [
+          { id: "1", title: "Review the requirements", description: "Read through the assignment carefully and identify key objectives.", status: "default" },
+          { id: "2", title: "Research & gather materials", description: "Find relevant resources and take notes on important concepts.", status: "default" },
+          { id: "3", title: "Work through the task", description: "Complete the main body of work step by step.", status: "default" },
+        ];
+        setSteps(fallback);
+        saveBoardSteps(taskId, fallback);
+
+        const welcomeMsg: ChatMessage = {
+          id: `ai-welcome-${Date.now()}`,
+          role: "ai",
+          text: `Hey! 👋 I've prepared a roadmap for tackling **${taskTitle}**. Check out the steps on the right and let's get started! 🚀`,
+        };
+        setMessages([welcomeMsg]);
+        saveBoardMessages(taskId, [welcomeMsg]);
+      } finally {
+        setIsGeneratingSteps(false);
+      }
+    };
+
+    generateStepsFromAI();
+  }, [taskId, taskTitle]);
+
   const sendMessageToDust = useCallback(async (text: string) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('dust-chat', {
-        body: {
-          message: text,
-          conversationId,
-          context: taskTitle,
-          taskId,
-        },
+        body: { message: text, conversationId, context: taskTitle, taskId },
       });
 
       if (error) throw error;
@@ -156,16 +253,18 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
   };
 
   const handleStepClick = (stepId: string) => {
-    setSteps((prev) =>
-      prev.map((s) => {
+    setSteps((prev) => {
+      const updated = prev.map((s) => {
         if (s.id === stepId) {
           if (s.status === "default") return { ...s, status: "active" as const };
           if (s.status === "active") return { ...s, status: "completed" as const };
           return { ...s, status: "default" as const };
         }
         return s;
-      })
-    );
+      });
+      saveBoardSteps(taskId, updated);
+      return updated;
+    });
   };
 
   const activeStep = steps.find((s) => s.status === "active");
@@ -208,28 +307,6 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
         {/* Left column — AI guidance + chat */}
         <div className="w-full md:w-[40%] flex flex-col border-r border-border/30 p-4 sm:p-5">
           <div className="flex-1 space-y-4 overflow-y-auto">
-            {/* AI instruction for current step */}
-            <div className="flex gap-3">
-              <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
-                <Sparkles className="h-4 w-4 text-accent" />
-              </div>
-              <div className="bg-accent/5 border border-accent/20 rounded-2xl rounded-tl-sm px-4 py-3">
-                <p className="text-sm text-foreground leading-relaxed">
-                  {activeStep
-                    ? `Great progress! 🎯 Let's work on: **${activeStep.title}**. ${activeStep.description} Click the card when you're done!`
-                        .split("**")
-                        .map((part, i) =>
-                          i % 2 === 1 ? (
-                            <span key={i} className="font-semibold text-accent">{part}</span>
-                          ) : (
-                            part
-                          )
-                        )
-                    : "Amazing — you've completed all steps! 🎉 Great job!"}
-                </p>
-              </div>
-            </div>
-
             {/* Chat messages */}
             {messages.map((msg) => (
               <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
@@ -262,7 +339,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
             ))}
 
             {/* Loading indicator */}
-            {isLoading && (
+            {(isLoading || isGeneratingSteps) && (
               <div className="flex gap-3">
                 <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Sparkles className="h-4 w-4 text-accent" />
@@ -270,7 +347,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
                 <div className="bg-accent/5 border border-accent/20 rounded-2xl rounded-tl-sm px-4 py-3">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Thinking...
+                    {isGeneratingSteps ? "Preparing your roadmap..." : "Thinking..."}
                   </div>
                 </div>
               </div>
@@ -288,7 +365,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about this step…"
                 className="border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm placeholder:text-muted-foreground/60 px-0"
-                disabled={isLoading}
+                disabled={isLoading || isGeneratingSteps}
               />
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
                 <Mic className="h-4 w-4" />
@@ -296,7 +373,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
               <Button
                 size="icon"
                 onClick={handleSendMessage}
-                disabled={isLoading}
+                disabled={isLoading || isGeneratingSteps}
                 className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
@@ -307,52 +384,63 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
 
         {/* Right column — Step cards grid */}
         <div className="hidden md:flex flex-col flex-1 p-4 sm:p-5 overflow-y-auto">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Let's Start! 🚀</h3>
-          <div className="grid gap-3">
-            {steps.map((step, index) => (
-              <button
-                key={step.id}
-                onClick={() => handleStepClick(step.id)}
-                className={`text-left p-5 rounded-2xl border-2 transition-all duration-300 ${
-                  step.status === "completed"
-                    ? "bg-muted/50 border-primary/30"
-                    : step.status === "active"
-                    ? "bg-card border-primary shadow-[0_0_16px_hsl(var(--primary)/0.15)] scale-[1.01]"
-                    : "bg-card border-border hover:border-primary/40 hover:shadow-sm"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
-                    {step.status === "completed" ? (
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                    ) : step.status === "active" ? (
-                      <div className="h-5 w-5 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center">
-                        <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                      </div>
-                    ) : (
-                      <Circle className="h-5 w-5 text-primary/40" />
-                    )}
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {isGeneratingSteps ? "Building your roadmap... ✨" : "Let's Start! 🚀"}
+          </h3>
+          {isGeneratingSteps ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center space-y-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                <p className="text-sm text-muted-foreground">AI is breaking down your task into steps...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {steps.map((step, index) => (
+                <button
+                  key={step.id}
+                  onClick={() => handleStepClick(step.id)}
+                  className={`text-left p-5 rounded-2xl border-2 transition-all duration-300 ${
+                    step.status === "completed"
+                      ? "bg-muted/50 border-primary/30"
+                      : step.status === "active"
+                      ? "bg-card border-primary shadow-[0_0_16px_hsl(var(--primary)/0.15)] scale-[1.01]"
+                      : "bg-card border-border hover:border-primary/40 hover:shadow-sm"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">
+                      {step.status === "completed" ? (
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                      ) : step.status === "active" ? (
+                        <div className="h-5 w-5 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center">
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        </div>
+                      ) : (
+                        <Circle className="h-5 w-5 text-primary/40" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold mb-0.5 ${
+                        step.status === "completed"
+                          ? "line-through text-muted-foreground"
+                          : step.status === "active"
+                          ? "text-foreground"
+                          : "text-foreground/80"
+                      }`}>
+                        Step {index + 1}: {step.title}
+                      </p>
+                      <p className={`text-xs leading-relaxed ${
+                        step.status === "completed" ? "text-muted-foreground/60" : "text-muted-foreground"
+                      }`}>
+                        {step.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold mb-0.5 ${
-                      step.status === "completed"
-                        ? "line-through text-muted-foreground"
-                        : step.status === "active"
-                        ? "text-foreground"
-                        : "text-foreground/80"
-                    }`}>
-                      Step {index + 1}: {step.title}
-                    </p>
-                    <p className={`text-xs leading-relaxed ${
-                      step.status === "completed" ? "text-muted-foreground/60" : "text-muted-foreground"
-                    }`}>
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
