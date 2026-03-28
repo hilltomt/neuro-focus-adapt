@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Clock, CheckCircle2, CalendarClock, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
