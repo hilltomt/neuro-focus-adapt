@@ -24,6 +24,14 @@ const Dashboard = () => {
     if (section) setActiveSection(section);
   }, [searchParams]);
 
+  const handleSectionChange = (section: string) => {
+    if (section === "ai-assistant") {
+      navigate("/assistant");
+      return;
+    }
+    setActiveSection(section);
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
