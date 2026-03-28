@@ -34,7 +34,7 @@ const HowItWorks = () => {
             <AlertTriangle className="h-4 w-4" />
             The Problem
           </div>
-          <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
+          <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground mb-4 tracking-tight">
             The system is failing our most vulnerable students.
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-body">
@@ -52,7 +52,7 @@ const HowItWorks = () => {
               transition={{ duration: 0.5, delay: index * 0.15 }}
               className="text-center p-6 rounded-xl border border-border bg-card shadow-sm"
             >
-              <div className="text-4xl md:text-5xl font-black font-display text-primary mb-3">{stat.value}</div>
+              <div className="text-4xl md:text-5xl font-normal font-display text-primary mb-3">{stat.value}</div>
               <p className="text-muted-foreground leading-relaxed mb-3 font-body">{stat.description}</p>
               <p className="text-xs text-muted-foreground/60 italic font-body">{stat.source}</p>
             </motion.div>

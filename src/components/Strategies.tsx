@@ -34,7 +34,7 @@ const Strategies = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
+          <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground mb-4 tracking-tight">
             One platform. For every person who cares about the child.
           </h2>
         </motion.div>
