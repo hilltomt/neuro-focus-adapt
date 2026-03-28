@@ -111,19 +111,23 @@ const Assistant = () => {
                   My Ongoing Tasks
                 </h3>
                 <div className="space-y-1">
-                  {ongoingTasks.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => handleSwitchTask(task.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
-                        activeTaskId === task.id
-                          ? "bg-primary/10 text-primary font-medium border border-primary/20"
-                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                      }`}
-                    >
-                      <span className="line-clamp-1">{task.title}</span>
-                    </button>
-                  ))}
+                  {ongoingTasks.length === 0 ? (
+                    <p className="text-xs text-muted-foreground/60 px-3 py-2">No tasks yet. Launch one from My Subjects.</p>
+                  ) : (
+                    ongoingTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => handleSwitchTask(task.id)}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
+                          activeTaskId === task.id
+                            ? "bg-primary/10 text-primary font-medium border border-primary/20"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        }`}
+                      >
+                        <span className="line-clamp-1">{task.title}</span>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
             </aside>
@@ -133,7 +137,7 @@ const Assistant = () => {
             <main className="flex-1 flex flex-col min-w-0">
               {showRoadmap ? (
                 <StudySessionBoard
-                  taskTitle={taskTitle || "Math: Fractions Worksheet"}
+                  taskTitle={currentTaskTitle || "Study Session"}
                   onBack={() => setShowRoadmap(false)}
                 />
               ) : (
