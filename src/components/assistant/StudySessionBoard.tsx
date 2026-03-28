@@ -161,7 +161,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
         if (s.id === stepId) {
           if (s.status === "default") return { ...s, status: "active" as const };
           if (s.status === "active") return { ...s, status: "completed" as const };
-          return { ...s, status: "active" as const };
+          return { ...s, status: "default" as const };
         }
         return s;
       })
