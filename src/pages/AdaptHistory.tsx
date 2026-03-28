@@ -17,7 +17,7 @@ interface Adaptation {
   created_at: string;
 }
 
-const AdaptHistory = () => {
+const AdaptHistory = ({ embedded }: { embedded?: boolean }) => {
   const { user } = useAuth();
   const [adaptations, setAdaptations] = useState<Adaptation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +47,7 @@ const AdaptHistory = () => {
     toast.success("Deleted");
   };
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="max-w-4xl">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
           Adaptation History
@@ -134,8 +133,10 @@ const AdaptHistory = () => {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
+
+  if (embedded) return content;
+  return <DashboardLayout>{content}</DashboardLayout>;
 };
 
 export default AdaptHistory;
