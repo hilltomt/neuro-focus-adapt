@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      adaptations: {
+        Row: {
+          adapted_content: string
+          created_at: string
+          id: string
+          original_content: string
+          strategies_used: string[] | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          adapted_content: string
+          created_at?: string
+          id?: string
+          original_content: string
+          strategies_used?: string[] | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          adapted_content?: string
+          created_at?: string
+          id?: string
+          original_content?: string
+          strategies_used?: string[] | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          school_name: string | null
+          subject_area: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          school_name?: string | null
+          subject_area?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          school_name?: string | null
+          subject_area?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
