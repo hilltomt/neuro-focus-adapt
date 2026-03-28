@@ -202,17 +202,19 @@ const Assistant = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar
-          activeSection="ai-assistant"
-          onSectionChange={(section) => {
-            if (section === "ai-assistant") navigate("/assistant");
-            else if (section === "dashboard") navigate("/dashboard");
-            else navigate(`/dashboard?section=${section}`);
-          }}
-          onSignOut={handleSignOut}
-          activeRole="student"
-          onRoleChange={() => {}}
-        />
+        {!showRoadmap && (
+          <DashboardSidebar
+            activeSection="ai-assistant"
+            onSectionChange={(section) => {
+              if (section === "ai-assistant") navigate("/assistant");
+              else if (section === "dashboard") navigate("/dashboard");
+              else navigate(`/dashboard?section=${section}`);
+            }}
+            onSignOut={handleSignOut}
+            activeRole="student"
+            onRoleChange={() => {}}
+          />
+        )}
         <div className="flex-1 flex flex-col min-w-0">
           <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-card/80 backdrop-blur-sm border-b border-border/50">
             <div className="flex items-center gap-2">
