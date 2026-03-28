@@ -98,6 +98,8 @@ const TeacherScheduleManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const demoUploaderId = user?.id ?? "00000000-0000-0000-0000-000000000000";
+
   // Standalone upload state
   const [standaloneSubject, setStandaloneSubject] = useState("");
   const [standaloneClass, setStandaloneClass] = useState("");
@@ -121,19 +123,19 @@ const TeacherScheduleManager = () => {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !user || !selectedLesson) return;
+    if (!files || !selectedLesson) return;
 
     setIsUploading(true);
     const newFiles: { name: string; url: string }[] = [];
 
     for (const file of Array.from(files)) {
-      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const filePath = `${demoUploaderId}/${Date.now()}-${file.name}`;
       const { error } = await supabase.storage
         .from("lesson-files")
         .upload(filePath, file);
 
       if (error) {
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(error.message || `Failed to upload ${file.name}`);
         continue;
       }
 
@@ -141,9 +143,8 @@ const TeacherScheduleManager = () => {
         .from("lesson-files")
         .getPublicUrl(filePath);
 
-      // Persist file metadata to lesson_files table
       const { error: dbError } = await supabase.from("lesson_files" as any).insert({
-        teacher_user_id: user.id,
+        teacher_user_id: demoUploaderId,
         subject: selectedLesson.subject,
         class: selectedLesson.class,
         file_name: file.name,
@@ -151,7 +152,7 @@ const TeacherScheduleManager = () => {
       });
 
       if (dbError) {
-        toast.error(`Failed to save ${file.name} metadata`);
+        toast.error(dbError.message || `Failed to save ${file.name} metadata`);
         continue;
       }
 
@@ -170,7 +171,7 @@ const TeacherScheduleManager = () => {
 
   const handleStandaloneUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !user) return;
+    if (!files) return;
     if (!standaloneSubject || !standaloneClass) {
       toast.error("Please select a subject and class first");
       return;
@@ -180,13 +181,13 @@ const TeacherScheduleManager = () => {
     const newFiles: { name: string; url: string }[] = [];
 
     for (const file of Array.from(files)) {
-      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const filePath = `${demoUploaderId}/${Date.now()}-${file.name}`;
       const { error } = await supabase.storage
         .from("lesson-files")
         .upload(filePath, file);
 
       if (error) {
-        toast.error(`Failed to upload ${file.name}`);
+        toast.error(error.message || `Failed to upload ${file.name}`);
         continue;
       }
 
@@ -195,7 +196,7 @@ const TeacherScheduleManager = () => {
         .getPublicUrl(filePath);
 
       const { error: dbError } = await supabase.from("lesson_files" as any).insert({
-        teacher_user_id: user.id,
+        teacher_user_id: demoUploaderId,
         subject: standaloneSubject,
         class: standaloneClass,
         file_name: file.name,
@@ -203,7 +204,7 @@ const TeacherScheduleManager = () => {
       });
 
       if (dbError) {
-        toast.error(`Failed to save ${file.name}`);
+        toast.error(dbError.message || `Failed to save ${file.name}`);
         continue;
       }
 
