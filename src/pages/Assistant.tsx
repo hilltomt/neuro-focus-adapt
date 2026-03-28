@@ -31,6 +31,8 @@ interface OngoingTask {
 }
 
 const STORAGE_KEY = "neuro_ongoing_tasks";
+const MESSAGES_STORAGE_KEY = "neuro_task_messages";
+const CONVOS_STORAGE_KEY = "neuro_task_conversations";
 
 const loadTasksFromStorage = (): OngoingTask[] => {
   try {
@@ -42,6 +44,30 @@ const loadTasksFromStorage = (): OngoingTask[] => {
 
 const saveTasksToStorage = (tasks: OngoingTask[]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+};
+
+const loadMessagesByTask = (): Record<string, ChatMessage[]> => {
+  try {
+    const raw = localStorage.getItem(MESSAGES_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+};
+
+const saveMessagesByTask = (messagesByTask: Record<string, ChatMessage[]>) => {
+  localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messagesByTask));
+};
+
+const loadConversationIds = (): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem(CONVOS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+};
+
+const saveConversationIds = (convos: Record<string, string>) => {
+  localStorage.setItem(CONVOS_STORAGE_KEY, JSON.stringify(convos));
 };
 
 const Assistant = () => {
