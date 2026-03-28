@@ -22,8 +22,8 @@ interface Task {
 const mockTasks: Record<string, { current: Task[]; upcoming: Task[]; completed: Task[] }> = {
   mathematics: {
     current: [
-      { id: "1", title: "Math: Fractions Worksheet", time: "15 min", description: "Complete exercises on adding and subtracting fractions with unlike denominators.", objectives: ["Simplify fractions", "Find common denominators", "Solve 10 practice problems"] },
-      { id: "2", title: "Math: Geometry Basics", time: "20 min", description: "Learn about basic geometric shapes, angles, and their properties.", objectives: ["Identify triangles, squares, and circles", "Measure angles with a protractor", "Calculate perimeter of simple shapes"] },
+      { id: "1", title: "Fractions Worksheet", time: "15 min", description: "Complete exercises on adding and subtracting fractions with unlike denominators.", objectives: ["Simplify fractions", "Find common denominators", "Solve 10 practice problems"] },
+      { id: "2", title: "Geometry Basics", time: "20 min", description: "Learn about basic geometric shapes, angles, and their properties.", objectives: ["Identify triangles, squares, and circles", "Measure angles with a protractor", "Calculate perimeter of simple shapes"] },
     ],
     upcoming: [
       { id: "3", title: "Algebra Introduction", due: "Apr 2", description: "Introduction to variables, expressions, and simple equations.", objectives: ["Understand what a variable is", "Write simple expressions"] },
@@ -36,8 +36,8 @@ const mockTasks: Record<string, { current: Task[]; upcoming: Task[]; completed: 
   },
   english: {
     current: [
-      { id: "1", title: "English: Write 3 Sentences", time: "8 min", description: "Write three complete sentences using this week's vocabulary words.", objectives: ["Use correct punctuation", "Include at least one adjective per sentence"] },
-      { id: "2", title: "English: Reading Comprehension", time: "12 min", description: "Read the short passage and answer comprehension questions.", objectives: ["Identify the main idea", "Find supporting details", "Make inferences"] },
+      { id: "1", title: "Write 3 Sentences", time: "8 min", description: "Write three complete sentences using this week's vocabulary words.", objectives: ["Use correct punctuation", "Include at least one adjective per sentence"] },
+      { id: "2", title: "Reading Comprehension", time: "12 min", description: "Read the short passage and answer comprehension questions.", objectives: ["Identify the main idea", "Find supporting details", "Make inferences"] },
     ],
     upcoming: [
       { id: "3", title: "Vocabulary Quiz", due: "Apr 3", description: "Quiz on 15 vocabulary words from Unit 4." },
@@ -48,8 +48,8 @@ const mockTasks: Record<string, { current: Task[]; upcoming: Task[]; completed: 
   },
   history: {
     current: [
-      { id: "1", title: "History Essay: Vikings", time: "25 min", description: "Write a short essay about Viking exploration and their impact on Europe.", objectives: ["Describe Viking routes", "Explain cultural exchanges", "Include at least 3 historical facts"] },
-      { id: "2", title: "History: Timeline Activity", time: "10 min", description: "Place key medieval events on a timeline in the correct order.", objectives: ["Order events chronologically", "Identify century for each event"] },
+      { id: "1", title: "Essay: Vikings", time: "25 min", description: "Write a short essay about Viking exploration and their impact on Europe.", objectives: ["Describe Viking routes", "Explain cultural exchanges", "Include at least 3 historical facts"] },
+      { id: "2", title: "Timeline Activity", time: "10 min", description: "Place key medieval events on a timeline in the correct order.", objectives: ["Order events chronologically", "Identify century for each event"] },
     ],
     upcoming: [
       { id: "3", title: "Ancient Egypt Project", due: "Apr 8", description: "Research project on daily life in Ancient Egypt." },
