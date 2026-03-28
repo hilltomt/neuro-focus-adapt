@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
-  ListChecks, BookOpen, HelpCircle, MessageSquare, MoreVertical, Trash2,
+  ListChecks, BookOpen, HelpCircle, MessageSquare, MoreVertical, Trash2, Loader2, User,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
