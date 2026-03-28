@@ -87,7 +87,8 @@ const Assistant = () => {
           </header>
 
           <div className="flex-1 flex min-h-0">
-            {/* Left Task Sidebar */}
+            {/* Left Task Sidebar — hidden during study session */}
+            {!showRoadmap && (
             <aside className="hidden md:flex w-[25%] min-w-[220px] max-w-[280px] flex-col border-r border-border/50 bg-card/50">
               <div className="px-4 py-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -110,6 +111,7 @@ const Assistant = () => {
                 </div>
               </div>
             </aside>
+            )}
 
             {/* Right Main Area */}
             <main className="flex-1 flex flex-col min-w-0">
