@@ -75,37 +75,6 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
         <p className="text-muted-foreground mt-1">Here's your day at a glance.</p>
       </div>
 
-      {/* Quick stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4 text-center">
-            <Target className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">{completedMissions}/{missions.length}</p>
-            <p className="text-xs text-muted-foreground">Today's Missions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Zap className="h-5 w-5 text-accent mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">3</p>
-            <p className="text-xs text-muted-foreground">Day Streak 🔥</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">42</p>
-            <p className="text-xs text-muted-foreground">Stars Earned</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <BookOpen className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">{adaptationCount}</p>
-            <p className="text-xs text-muted-foreground">Adapted Texts</p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Today's missions */}
       <Card>
