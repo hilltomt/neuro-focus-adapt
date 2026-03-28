@@ -105,6 +105,7 @@ serve(async (req) => {
           mentions: [{ configurationId: 'NeuroStudyBuddy' }],
           context: {
             timezone: 'Europe/Stockholm',
+            username: 'student',
             profilePictureUrl: null,
             fullName: 'Student',
             email: null,
