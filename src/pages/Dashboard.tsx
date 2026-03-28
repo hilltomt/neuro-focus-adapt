@@ -10,6 +10,7 @@ import SubjectsView from "@/components/student/SubjectsView";
 import AIAssistantPlaceholder from "@/components/student/AIAssistantPlaceholder";
 import ProgressView from "@/components/student/ProgressView";
 import Adapt from "@/pages/Adapt";
+import TeacherAdaptContent from "@/components/teacher/TeacherAdaptContent";
 import AdaptHistory from "@/pages/AdaptHistory";
 import DashboardSettings from "@/pages/DashboardSettings";
 import TeacherDashboard from "@/components/teacher/TeacherDashboard";
