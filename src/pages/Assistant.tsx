@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
@@ -11,12 +11,24 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import StudySessionBoard from "@/components/assistant/StudySessionBoard";
 
-const defaultTasks = [
-  { id: "fractions", title: "Math: Fractions Worksheet" },
-  { id: "vikings", title: "History: Viking Essay" },
-  { id: "science", title: "Science Quiz" },
-  { id: "reading", title: "English: Reading Comprehension" },
-];
+interface OngoingTask {
+  id: string;
+  title: string;
+}
+
+const STORAGE_KEY = "neuro_ongoing_tasks";
+
+const loadTasksFromStorage = (): OngoingTask[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+};
+
+const saveTasksToStorage = (tasks: OngoingTask[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+};
 
 const Assistant = () => {
   const [searchParams] = useSearchParams();
@@ -24,26 +36,30 @@ const Assistant = () => {
   const { signOut } = useAuth();
   const taskTitle = searchParams.get("task");
 
-  // Build task list ensuring URL task is included
-  const ongoingTasks = (() => {
-    const tasks = [...defaultTasks];
-    if (taskTitle && !tasks.some((t) => t.title === taskTitle)) {
-      tasks.unshift({ id: `custom-${taskTitle}`, title: taskTitle });
+  const [ongoingTasks, setOngoingTasks] = useState<OngoingTask[]>(() => {
+    const stored = loadTasksFromStorage();
+    // Ensure current URL task is in the list
+    if (taskTitle && !stored.some((t) => t.title === taskTitle)) {
+      const updated = [{ id: `task-${Date.now()}`, title: taskTitle }, ...stored];
+      saveTasksToStorage(updated);
+      return updated;
     }
-    return tasks;
-  })();
+    return stored.length > 0 ? stored : [];
+  });
 
-  const initialActiveId = taskTitle
-    ? (ongoingTasks.find((t) => t.title === taskTitle)?.id ?? ongoingTasks[0].id)
-    : ongoingTasks[0].id;
+  const activeTask = taskTitle
+    ? ongoingTasks.find((t) => t.title === taskTitle)
+    : ongoingTasks[0];
 
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
-  const [activeTaskId, setActiveTaskId] = useState(initialActiveId);
+  const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
 
-  const greeting = taskTitle
-    ? `Hi Lucas! 👋 I see we need to tackle **${taskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
-    : "Hi Lucas! 👋 I'm your AI learning assistant. Pick a task or ask me anything!";
+  const currentTaskTitle = activeTask?.title ?? taskTitle;
+
+  const greeting = currentTaskTitle
+    ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
+    : "Hi Lucas! 👋 I'm your AI learning assistant. Launch a task from My Subjects to get started!";
 
   const handleSignOut = async () => {
     await signOut();
@@ -95,19 +111,23 @@ const Assistant = () => {
                   My Ongoing Tasks
                 </h3>
                 <div className="space-y-1">
-                  {ongoingTasks.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => handleSwitchTask(task.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
-                        activeTaskId === task.id
-                          ? "bg-primary/10 text-primary font-medium border border-primary/20"
-                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                      }`}
-                    >
-                      <span className="line-clamp-1">{task.title}</span>
-                    </button>
-                  ))}
+                  {ongoingTasks.length === 0 ? (
+                    <p className="text-xs text-muted-foreground/60 px-3 py-2">No tasks yet. Launch one from My Subjects.</p>
+                  ) : (
+                    ongoingTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => handleSwitchTask(task.id)}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
+                          activeTaskId === task.id
+                            ? "bg-primary/10 text-primary font-medium border border-primary/20"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        }`}
+                      >
+                        <span className="line-clamp-1">{task.title}</span>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
             </aside>
@@ -117,7 +137,7 @@ const Assistant = () => {
             <main className="flex-1 flex flex-col min-w-0">
               {showRoadmap ? (
                 <StudySessionBoard
-                  taskTitle={taskTitle || "Math: Fractions Worksheet"}
+                  taskTitle={currentTaskTitle || "Study Session"}
                   onBack={() => setShowRoadmap(false)}
                 />
               ) : (
