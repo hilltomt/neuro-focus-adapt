@@ -243,23 +243,21 @@ Return ONLY the JSON, no markdown fences or extra text.`,
       });
       if (error) throw error;
 
-      // Create missions for each selected student
-      const missions = selectedStudents.map((studentId) => ({
-        student_identifier: studentId,
-        teacher_user_id: user.id,
-        subject: selectedLesson?.subject || "",
-        title: `${selectedLesson?.subject}: ${selectedLesson?.description?.split("—")[0]?.trim() || "Task"}`,
-        description: selectedLesson?.description || "",
-        estimated_time: microSprints.length > 0
-          ? `${microSprints.reduce((sum, s) => sum + parseInt(s.duration) || 0, 0)} min`
-          : "15 min",
-        adapted_content: adaptedContent,
-        micro_sprints: microSprints.length > 0 ? JSON.stringify(microSprints) : null,
-      }));
-
+      // Create a single mission visible to all students (demo mode)
       const { error: missionsError } = await supabase
         .from("student_missions")
-        .insert(missions);
+        .insert({
+          student_identifier: "everyone",
+          teacher_user_id: user.id,
+          subject: selectedLesson?.subject || "",
+          title: `${selectedLesson?.subject}: ${selectedLesson?.description?.split("—")[0]?.trim() || "Task"}`,
+          description: selectedLesson?.description || "",
+          estimated_time: microSprints.length > 0
+            ? `${microSprints.reduce((sum, s) => sum + parseInt(s.duration) || 0, 0)} min`
+            : "15 min",
+          adapted_content: adaptedContent,
+          micro_sprints: microSprints.length > 0 ? JSON.stringify(microSprints) : null,
+        });
       if (missionsError) throw missionsError;
 
       const studentNames = selectedStudents
