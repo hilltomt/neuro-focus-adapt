@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, BookOpen, Target, Zap, Clock, ArrowRight, CheckCircle2, Star } from "lucide-react";
+import { Brain, BookOpen, Target, Zap, Clock, ArrowRight, CheckCircle2, Star, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
