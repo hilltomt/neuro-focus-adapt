@@ -14,7 +14,7 @@ const Navbar = () => {
           <a href="#strategies" className="hover:text-foreground transition-colors">Strategies</a>
           <a href="#adapt" className="hover:text-foreground transition-colors">Try it</a>
         </div>
-        <Button size="sm">Get Started</Button>
+        <Button size="sm" asChild><a href="/auth">Get Started</a></Button>
       </div>
     </nav>
   );
