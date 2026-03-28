@@ -132,12 +132,20 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
     if (!text || isLoading) return;
 
     const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => {
+      const updated = [...prev, userMsg];
+      saveBoardMessages(taskId, updated);
+      return updated;
+    });
     setChatInput("");
 
     const reply = await sendMessageToDust(text);
     const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: reply };
-    setMessages((prev) => [...prev, aiMsg]);
+    setMessages((prev) => {
+      const updated = [...prev, aiMsg];
+      saveBoardMessages(taskId, updated);
+      return updated;
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
