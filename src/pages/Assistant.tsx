@@ -68,12 +68,53 @@ const Assistant = () => {
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentTaskTitle = activeTask?.title ?? taskTitle;
 
   const greeting = currentTaskTitle
     ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
     : "Hi Lucas! 👋 I'm your AI learning assistant. Launch a task from My Subjects to get started!";
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMainChat = async () => {
+    const text = chatInput.trim();
+    if (!text || isLoading) return;
+
+    const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
+    setMessages((prev) => [...prev, userMsg]);
+    setChatInput("");
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('dust-chat', {
+        body: { message: text, conversationId, context: currentTaskTitle },
+      });
+      if (error) throw error;
+      if (data?.conversationId) setConversationId(data.conversationId);
+      const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: data?.reply || "Let me think about that..." };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: "Sorry, I had trouble connecting. Please try again! 🔄" };
+      setMessages((prev) => [...prev, aiMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChatKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMainChat();
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
