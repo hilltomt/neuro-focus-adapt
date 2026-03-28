@@ -11,22 +11,35 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import StudySessionBoard from "@/components/assistant/StudySessionBoard";
 
-const ongoingTasks = [
-  { id: "fractions", title: "Math: Fractions Worksheet", active: true },
-  { id: "vikings", title: "History: Viking Essay", active: false },
-  { id: "science", title: "Science Quiz", active: false },
-  { id: "reading", title: "English: Reading Comprehension", active: false },
+const defaultTasks = [
+  { id: "fractions", title: "Math: Fractions Worksheet" },
+  { id: "vikings", title: "History: Viking Essay" },
+  { id: "science", title: "Science Quiz" },
+  { id: "reading", title: "English: Reading Comprehension" },
 ];
 
 const Assistant = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const taskTitle = searchParams.get("task");
+
+  // Build task list ensuring URL task is included
+  const ongoingTasks = (() => {
+    const tasks = [...defaultTasks];
+    if (taskTitle && !tasks.some((t) => t.title === taskTitle)) {
+      tasks.unshift({ id: `custom-${taskTitle}`, title: taskTitle });
+    }
+    return tasks;
+  })();
+
+  const initialActiveId = taskTitle
+    ? (ongoingTasks.find((t) => t.title === taskTitle)?.id ?? ongoingTasks[0].id)
+    : ongoingTasks[0].id;
+
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
-  const [activeTaskId, setActiveTaskId] = useState("fractions");
-
-  const taskTitle = searchParams.get("task");
+  const [activeTaskId, setActiveTaskId] = useState(initialActiveId);
 
   const greeting = taskTitle
     ? `Hi Lucas! 👋 I see we need to tackle **${taskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
