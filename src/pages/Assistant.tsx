@@ -2,8 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
-  ListChecks, BookOpen, HelpCircle, MessageSquare,
+  ListChecks, BookOpen, HelpCircle, MessageSquare, MoreVertical, Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
