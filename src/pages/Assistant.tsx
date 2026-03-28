@@ -178,6 +178,17 @@ const Assistant = () => {
     const updated = ongoingTasks.filter((t) => t.id !== taskId);
     setOngoingTasks(updated);
     saveTasksToStorage(updated);
+    // Clean up task-specific messages and conversation
+    setMessagesByTask((prev) => {
+      const { [taskId]: _, ...rest } = prev;
+      saveMessagesByTask(rest);
+      return rest;
+    });
+    setConversationIds((prev) => {
+      const { [taskId]: _, ...rest } = prev;
+      saveConversationIds(rest);
+      return rest;
+    });
     if (activeTaskId === taskId) {
       if (updated.length > 0) {
         handleSwitchTask(updated[0].id);
