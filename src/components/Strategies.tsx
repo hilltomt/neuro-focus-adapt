@@ -1,21 +1,22 @@
 import { motion } from "framer-motion";
+import { GraduationCap, BookOpen, Heart, LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-const features = [
+const features: { icon: LucideIcon; title: string; subtitle: string; description: string }[] = [
   {
-    emoji: "👨‍🏫",
+    icon: GraduationCap,
     title: "For Teachers",
     subtitle: "Smart scheduling & student overviews.",
     description: "See every student's level, needs, and achievements at a glance. Spend less time on admin and more time actually teaching.",
   },
   {
-    emoji: "🎓",
+    icon: BookOpen,
     title: "For Students",
     subtitle: "A calm, structured school day.",
     description: "Materials, schedules, and feedback — all in one place. No overwhelm. No confusion. Just clarity.",
   },
   {
-    emoji: "❤️",
+    icon: Heart,
     title: "For Parents",
     subtitle: "Stay close, without chasing anyone.",
     description: "See what your child is working on, what they've achieved, and communicate directly with teachers — all without a single phone call.",
@@ -49,7 +50,7 @@ const Strategies = () => {
             >
               <Card className="h-full border-border hover:border-primary/30 hover:shadow-md transition-all duration-300 bg-card rounded-xl">
                 <CardContent className="p-6">
-                  <div className="text-3xl mb-3">{feature.emoji}</div>
+                  <feature.icon className="h-7 w-7 text-primary mb-3" strokeWidth={1.5} />
                   <h3 className="font-display text-lg font-bold text-foreground mb-1">{feature.title}</h3>
                   <p className="text-primary font-bold text-sm mb-2 font-display">{feature.subtitle}</p>
                   <p className="text-muted-foreground text-sm leading-relaxed font-body">{feature.description}</p>
