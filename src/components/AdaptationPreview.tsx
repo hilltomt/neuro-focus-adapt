@@ -21,7 +21,7 @@ const AdaptationPreview = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-14"
         >
-          <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
+          <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground mb-4 tracking-tight">
             See the difference
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto font-body">

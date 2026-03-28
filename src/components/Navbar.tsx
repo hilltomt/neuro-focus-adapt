@@ -7,7 +7,7 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between h-14 px-6">
         <div className="flex items-center gap-2">
           <Brain className="h-6 w-6 text-primary" />
-          <span className="font-display text-xl font-black text-foreground tracking-tight">Neuro</span>
+          <span className="font-display text-xl font-normal text-foreground tracking-tight">Neuro</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-bold font-display text-muted-foreground">
           <a href="#the-problem" className="hover:text-foreground transition-colors">The Problem</a>

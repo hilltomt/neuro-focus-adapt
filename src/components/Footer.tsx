@@ -22,7 +22,7 @@ const Footer = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-14"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
+            <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground mb-4 tracking-tight">
               The Business Case
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-body">
@@ -40,7 +40,7 @@ const Footer = () => {
                 transition={{ duration: 0.5, delay: index * 0.15 }}
                 className="text-center p-6 rounded-xl border border-border bg-card shadow-sm"
               >
-                <div className="text-3xl md:text-4xl font-black font-display text-primary mb-3">{stat.value}</div>
+                <div className="text-3xl md:text-4xl font-normal font-display text-primary mb-3">{stat.value}</div>
                 <p className="text-muted-foreground text-sm leading-relaxed font-body">{stat.description}</p>
               </motion.div>
             ))}
@@ -69,7 +69,7 @@ const Footer = () => {
             transition={{ duration: 0.6 }}
             className="max-w-2xl mx-auto text-center"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
+            <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground mb-4 tracking-tight">
               Be the first school to use Neuro.
             </h2>
             <p className="text-muted-foreground text-lg mb-8 font-body">
@@ -94,7 +94,7 @@ const Footer = () => {
         <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
-            <span className="font-display text-lg font-black text-foreground tracking-tight">Neuro</span>
+            <span className="font-display text-lg font-normal text-foreground tracking-tight">Neuro</span>
           </div>
           <p className="text-sm text-muted-foreground font-body">
             © 2026 Neuro. All rights reserved.

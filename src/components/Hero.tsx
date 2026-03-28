@@ -19,7 +19,7 @@ const Hero = () => {
             For schools that care
           </div>
 
-          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-black text-foreground leading-tight mb-6 tracking-tight">
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-normal text-foreground leading-tight mb-6 tracking-tight">
             Every special needs student has the right to{" "}
             <span className="text-primary">support.</span>
           </h1>
