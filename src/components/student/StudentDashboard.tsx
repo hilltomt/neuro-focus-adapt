@@ -77,7 +77,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4 text-center">
             <Target className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">{completedMissions}/{todayMissions.length}</p>
+            <p className="text-2xl font-bold text-foreground">{completedMissions}/{missions.length}</p>
             <p className="text-xs text-muted-foreground">Today's Missions</p>
           </CardContent>
         </Card>
@@ -112,11 +112,11 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
               <Target className="h-4 w-4 text-primary" />
               Today's Missions
             </span>
-            <span className="text-xs font-normal text-muted-foreground">{completedMissions} of {todayMissions.length} done</span>
+            <span className="text-xs font-normal text-muted-foreground">{completedMissions} of {missions.length} done</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {todayMissions.map((mission) => (
+          {missions.map((mission) => (
             <div
               key={mission.id}
               onClick={() => navigate(`/subject/${encodeURIComponent(mission.subject)}`)}
