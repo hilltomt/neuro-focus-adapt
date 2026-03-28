@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Calendar, Clock, BookOpen, Plus, Wand2, X, Send, Save, Sparkles, ArrowLeft } from "lucide-react";
+import { useState, useRef } from "react";
+import { Calendar, Clock, BookOpen, Plus, Wand2, X, Send, Save, Sparkles, ArrowLeft, Paperclip, FileText, Trash2, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,6 +94,9 @@ const TeacherScheduleManager = () => {
   const [adaptedContent, setAdaptedContent] = useState("");
   const [microSprints, setMicroSprints] = useState<MicroSprint[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleLessonClick = (lesson: ScheduleLesson, day: string) => {
     setSelectedLesson({ ...lesson, day });
@@ -102,6 +105,42 @@ const TeacherScheduleManager = () => {
     setMicroSprints([]);
     setSelectedStudents([]);
     setAdaptationType("adhd");
+    setUploadedFiles([]);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !user) return;
+
+    setIsUploading(true);
+    const newFiles: { name: string; url: string }[] = [];
+
+    for (const file of Array.from(files)) {
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage
+        .from("lesson-files")
+        .upload(filePath, file);
+
+      if (error) {
+        toast.error(`Failed to upload ${file.name}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("lesson-files")
+        .getPublicUrl(filePath);
+
+      newFiles.push({ name: file.name, url: urlData.publicUrl });
+    }
+
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    if (newFiles.length > 0) toast.success(`${newFiles.length} file(s) uploaded`);
+    setIsUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleClose = () => {
@@ -330,6 +369,52 @@ Return ONLY the JSON, no markdown fences or extra text.`,
                 placeholder="Edit or paste lesson content..."
                 className="min-h-[100px] resize-none"
               />
+            </div>
+
+            {/* File upload */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Attachments</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border hover:border-primary/30 bg-muted/30 cursor-pointer transition-colors"
+              >
+                {isUploading ? (
+                  <p className="text-sm text-muted-foreground">Uploading...</p>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Click to upload files (PDF, DOC, images)</p>
+                  </>
+                )}
+              </div>
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {uploadedFiles.map((file, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card">
+                      <FileText className="h-4 w-4 text-primary shrink-0" />
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-foreground hover:text-primary truncate flex-1"
+                      >
+                        {file.name}
+                      </a>
+                      <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Generate button */}
