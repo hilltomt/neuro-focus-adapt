@@ -94,12 +94,14 @@ const Assistant = () => {
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messagesByTask, setMessagesByTask] = useState<Record<string, ChatMessage[]>>(loadMessagesByTask);
+  const [conversationIds, setConversationIds] = useState<Record<string, string>>(loadConversationIds);
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentTaskTitle = activeTask?.title ?? taskTitle;
+  const currentMessages = activeTaskId ? (messagesByTask[activeTaskId] || []) : [];
+  const currentConversationId = activeTaskId ? (conversationIds[activeTaskId] || null) : null;
 
   const greeting = currentTaskTitle
     ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
@@ -107,7 +109,7 @@ const Assistant = () => {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [currentMessages]);
 
   const handleSendMainChat = async () => {
     const text = chatInput.trim();
