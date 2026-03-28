@@ -33,11 +33,11 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-base px-8 gap-2">
-              Start adapting <ArrowRight className="h-4 w-4" />
+            <Button size="lg" className="text-base px-8 gap-2" asChild>
+              <a href="/auth">Start adapting <ArrowRight className="h-4 w-4" /></a>
             </Button>
-            <Button variant="outline" size="lg" className="text-base px-8">
-              See how it works
+            <Button variant="outline" size="lg" className="text-base px-8" asChild>
+              <a href="#how-it-works">See how it works</a>
             </Button>
           </div>
         </motion.div>
