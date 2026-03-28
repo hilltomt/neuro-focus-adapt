@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_files: {
+        Row: {
+          class: string
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          subject: string
+          teacher_user_id: string
+        }
+        Insert: {
+          class: string
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          subject: string
+          teacher_user_id: string
+        }
+        Update: {
+          class?: string
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          subject?: string
+          teacher_user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
