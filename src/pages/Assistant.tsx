@@ -81,6 +81,20 @@ const Assistant = () => {
     }
   };
 
+  const handleRemoveTask = (taskId: string) => {
+    const updated = ongoingTasks.filter((t) => t.id !== taskId);
+    setOngoingTasks(updated);
+    saveTasksToStorage(updated);
+    if (activeTaskId === taskId) {
+      if (updated.length > 0) {
+        handleSwitchTask(updated[0].id);
+      } else {
+        setActiveTaskId("");
+        navigate("/assistant", { replace: true });
+      }
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
