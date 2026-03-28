@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
@@ -11,12 +11,24 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import StudySessionBoard from "@/components/assistant/StudySessionBoard";
 
-const defaultTasks = [
-  { id: "fractions", title: "Math: Fractions Worksheet" },
-  { id: "vikings", title: "History: Viking Essay" },
-  { id: "science", title: "Science Quiz" },
-  { id: "reading", title: "English: Reading Comprehension" },
-];
+interface OngoingTask {
+  id: string;
+  title: string;
+}
+
+const STORAGE_KEY = "neuro_ongoing_tasks";
+
+const loadTasksFromStorage = (): OngoingTask[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+};
+
+const saveTasksToStorage = (tasks: OngoingTask[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+};
 
 const Assistant = () => {
   const [searchParams] = useSearchParams();
@@ -24,22 +36,24 @@ const Assistant = () => {
   const { signOut } = useAuth();
   const taskTitle = searchParams.get("task");
 
-  // Build task list ensuring URL task is included
-  const ongoingTasks = (() => {
-    const tasks = [...defaultTasks];
-    if (taskTitle && !tasks.some((t) => t.title === taskTitle)) {
-      tasks.unshift({ id: `custom-${taskTitle}`, title: taskTitle });
+  const [ongoingTasks, setOngoingTasks] = useState<OngoingTask[]>(() => {
+    const stored = loadTasksFromStorage();
+    // Ensure current URL task is in the list
+    if (taskTitle && !stored.some((t) => t.title === taskTitle)) {
+      const updated = [{ id: `task-${Date.now()}`, title: taskTitle }, ...stored];
+      saveTasksToStorage(updated);
+      return updated;
     }
-    return tasks;
-  })();
+    return stored.length > 0 ? stored : [];
+  });
 
-  const initialActiveId = taskTitle
-    ? (ongoingTasks.find((t) => t.title === taskTitle)?.id ?? ongoingTasks[0].id)
-    : ongoingTasks[0].id;
+  const activeTask = taskTitle
+    ? ongoingTasks.find((t) => t.title === taskTitle)
+    : ongoingTasks[0];
 
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
-  const [activeTaskId, setActiveTaskId] = useState(initialActiveId);
+  const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
 
   const greeting = taskTitle
     ? `Hi Lucas! 👋 I see we need to tackle **${taskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
