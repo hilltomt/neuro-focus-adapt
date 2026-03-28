@@ -28,20 +28,20 @@ const generateSteps = (taskTitle: string): Step[] => {
   const lower = taskTitle.toLowerCase();
   if (lower.includes("fraction")) {
     return [
-      { id: "1", title: "Simplify 3 Fractions", description: "Reduce fractions to their simplest form using GCD.", status: "completed" },
-      { id: "2", title: "Add Unlike Denominators", description: "Find common denominators and add fractions together.", status: "active" },
+      { id: "1", title: "Simplify 3 Fractions", description: "Reduce fractions to their simplest form using GCD.", status: "default" },
+      { id: "2", title: "Add Unlike Denominators", description: "Find common denominators and add fractions together.", status: "default" },
       { id: "3", title: "Fraction Word Problem", description: "Apply fraction skills to solve a real-world word problem.", status: "default" },
     ];
   }
   if (lower.includes("viking") || lower.includes("history")) {
     return [
-      { id: "1", title: "Research Viking Routes", description: "Map out the main Viking exploration routes across Europe.", status: "active" },
+      { id: "1", title: "Research Viking Routes", description: "Map out the main Viking exploration routes across Europe.", status: "default" },
       { id: "2", title: "Write Introduction", description: "Draft the opening paragraph with a strong thesis.", status: "default" },
       { id: "3", title: "Add Historical Facts", description: "Include at least 3 verified historical facts with sources.", status: "default" },
     ];
   }
   return [
-    { id: "1", title: "Step 1: Review Material", description: "Go through the core concepts one more time.", status: "active" },
+    { id: "1", title: "Step 1: Review Material", description: "Go through the core concepts one more time.", status: "default" },
     { id: "2", title: "Step 2: Practice", description: "Complete the practice exercises.", status: "default" },
     { id: "3", title: "Step 3: Self-Check", description: "Quiz yourself on what you learned.", status: "default" },
   ];
@@ -318,7 +318,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
                     ? "bg-muted/50 border-primary/30"
                     : step.status === "active"
                     ? "bg-card border-primary shadow-[0_0_16px_hsl(var(--primary)/0.15)] scale-[1.01]"
-                    : "bg-card border-border/60 hover:border-border"
+                    : "bg-card border-border hover:border-primary/40 hover:shadow-sm"
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -330,7 +330,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
                         <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                       </div>
                     ) : (
-                      <Circle className="h-5 w-5 text-muted-foreground/40" />
+                      <Circle className="h-5 w-5 text-primary/40" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -339,7 +339,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
                         ? "line-through text-muted-foreground"
                         : step.status === "active"
                         ? "text-foreground"
-                        : "text-muted-foreground"
+                        : "text-foreground/80"
                     }`}>
                       Step {index + 1}: {step.title}
                     </p>
