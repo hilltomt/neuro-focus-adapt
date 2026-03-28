@@ -254,7 +254,7 @@ const StudySessionBoard = ({ taskTitle, taskId, onBack }: StudySessionBoardProps
 
   const handleStepClick = async (stepId: string) => {
     let clickedStep: Step | undefined;
-    let newStatus: Step["status"] = "default";
+    let newStatus: "default" | "active" | "completed" = "default";
 
     setSteps((prev) => {
       const updated = prev.map((s) => {
