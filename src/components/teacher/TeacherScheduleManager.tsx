@@ -98,6 +98,17 @@ const TeacherScheduleManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Standalone upload state
+  const [standaloneSubject, setStandaloneSubject] = useState("");
+  const [standaloneClass, setStandaloneClass] = useState("");
+  const [standaloneUploading, setStandaloneUploading] = useState(false);
+  const [standaloneFiles, setStandaloneFiles] = useState<{ name: string; url: string }[]>([]);
+  const standaloneFileRef = useRef<HTMLInputElement>(null);
+
+  // Get unique subjects and classes from schedule
+  const allSubjects = [...new Set(scheduleData.flatMap((d) => d.lessons.map((l) => l.subject)))];
+  const allClasses = [...new Set(scheduleData.flatMap((d) => d.lessons.map((l) => l.class)))];
+
   const handleLessonClick = (lesson: ScheduleLesson, day: string) => {
     setSelectedLesson({ ...lesson, day });
     setLessonText(lesson.description || "");
@@ -155,6 +166,54 @@ const TeacherScheduleManager = () => {
 
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleStandaloneUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !user) return;
+    if (!standaloneSubject || !standaloneClass) {
+      toast.error("Please select a subject and class first");
+      return;
+    }
+
+    setStandaloneUploading(true);
+    const newFiles: { name: string; url: string }[] = [];
+
+    for (const file of Array.from(files)) {
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage
+        .from("lesson-files")
+        .upload(filePath, file);
+
+      if (error) {
+        toast.error(`Failed to upload ${file.name}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("lesson-files")
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from("lesson_files" as any).insert({
+        teacher_user_id: user.id,
+        subject: standaloneSubject,
+        class: standaloneClass,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+      });
+
+      if (dbError) {
+        toast.error(`Failed to save ${file.name}`);
+        continue;
+      }
+
+      newFiles.push({ name: file.name, url: urlData.publicUrl });
+    }
+
+    setStandaloneFiles((prev) => [...prev, ...newFiles]);
+    if (newFiles.length > 0) toast.success(`${newFiles.length} file(s) uploaded to ${standaloneSubject} — ${standaloneClass}`);
+    setStandaloneUploading(false);
+    if (standaloneFileRef.current) standaloneFileRef.current.value = "";
   };
 
   const handleClose = () => {
