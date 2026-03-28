@@ -93,6 +93,7 @@ const Assistant = () => {
 
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
+  const [showTaskSidebar, setShowTaskSidebar] = useState(!taskTitle);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
   const [messagesByTask, setMessagesByTask] = useState<Record<string, ChatMessage[]>>(loadMessagesByTask);
   const [conversationIds, setConversationIds] = useState<Record<string, string>>(loadConversationIds);
