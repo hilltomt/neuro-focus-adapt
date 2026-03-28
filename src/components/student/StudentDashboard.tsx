@@ -38,7 +38,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
       const [profileRes, countRes, missionsRes] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("user_id", user.id).single(),
         supabase.from("adaptations").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("student_missions").select("*").eq("student_identifier", "lucas").order("created_at", { ascending: false }),
+        supabase.from("student_missions").select("*").order("created_at", { ascending: false }),
       ]);
       if (profileRes.data) setProfile(profileRes.data);
       if (countRes.count !== null) setAdaptationCount(countRes.count);
