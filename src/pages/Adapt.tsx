@@ -18,7 +18,7 @@ const strategies = [
   { id: "key-points", label: "Key Points Summary", description: "Add a TL;DR section" },
 ];
 
-const Adapt = () => {
+const Adapt = ({ embedded }: { embedded?: boolean }) => {
   const { user } = useAuth();
   const [originalContent, setOriginalContent] = useState("");
   const [adaptedContent, setAdaptedContent] = useState("");
@@ -130,8 +130,7 @@ const Adapt = () => {
     toast.success("Copied to clipboard!");
   };
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="max-w-6xl">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
           Adapt Content
@@ -225,8 +224,10 @@ const Adapt = () => {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
   );
+
+  if (embedded) return content;
+  return <DashboardLayout>{content}</DashboardLayout>;
 };
 
 export default Adapt;

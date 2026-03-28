@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const DashboardSettings = () => {
+const DashboardSettings = ({ embedded }: { embedded?: boolean }) => {
   const { user } = useAuth();
   const [fullName, setFullName] = useState("");
   const [schoolName, setSchoolName] = useState("");
@@ -52,15 +52,12 @@ const DashboardSettings = () => {
   };
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="text-muted-foreground animate-pulse">Loading...</div>
-      </DashboardLayout>
-    );
+    const loader = <div className="text-muted-foreground animate-pulse">Loading...</div>;
+    if (embedded) return loader;
+    return <DashboardLayout>{loader}</DashboardLayout>;
   }
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="max-w-lg">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
           Settings
@@ -111,8 +108,10 @@ const DashboardSettings = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
+
+  if (embedded) return content;
+  return <DashboardLayout>{content}</DashboardLayout>;
 };
 
 export default DashboardSettings;
