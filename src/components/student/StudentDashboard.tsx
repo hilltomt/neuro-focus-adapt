@@ -55,6 +55,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
           adapted_content: m.adapted_content,
         }));
         setMissions([...dbMissions, ...defaultMissions]);
+        setNewestMissionId(dbMissions[0]?.id || null);
       }
     };
     fetchData();
