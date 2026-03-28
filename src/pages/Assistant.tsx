@@ -111,27 +111,43 @@ const Assistant = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages]);
 
+  const updateTaskMessages = (taskId: string, updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+    setMessagesByTask((prev) => {
+      const updated = { ...prev, [taskId]: updater(prev[taskId] || []) };
+      saveMessagesByTask(updated);
+      return updated;
+    });
+  };
+
+  const updateConversationId = (taskId: string, convId: string) => {
+    setConversationIds((prev) => {
+      const updated = { ...prev, [taskId]: convId };
+      saveConversationIds(updated);
+      return updated;
+    });
+  };
+
   const handleSendMainChat = async () => {
     const text = chatInput.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || !activeTaskId) return;
 
     const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    updateTaskMessages(activeTaskId, (prev) => [...prev, userMsg]);
     setChatInput("");
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('dust-chat', {
-        body: { message: text, conversationId, context: currentTaskTitle },
+        body: { message: text, conversationId: currentConversationId, context: currentTaskTitle, taskId: activeTaskId },
       });
       if (error) throw error;
-      if (data?.conversationId) setConversationId(data.conversationId);
+      if (data?.conversationId) updateConversationId(activeTaskId, data.conversationId);
       const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: data?.reply || "Let me think about that..." };
-      setMessages((prev) => [...prev, aiMsg]);
+      updateTaskMessages(activeTaskId, (prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error('Chat error:', err);
       const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: "Sorry, I had trouble connecting. Please try again! 🔄" };
-      setMessages((prev) => [...prev, aiMsg]);
+      updateTaskMessages(activeTaskId, (prev) => [...prev, aiMsg]);
     } finally {
       setIsLoading(false);
     }
