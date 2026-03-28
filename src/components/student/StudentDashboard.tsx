@@ -32,6 +32,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
   const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const [adaptationCount, setAdaptationCount] = useState(0);
   const [missions, setMissions] = useState<Mission[]>(defaultMissions);
+  const [newestMissionId, setNewestMissionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
