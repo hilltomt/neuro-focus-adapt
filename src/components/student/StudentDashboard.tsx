@@ -141,6 +141,12 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${mission.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                   {mission.title}
+                  {mission.id === newestMissionId && !mission.done && (
+                    <Badge variant="default" className="ml-2 text-[10px] px-1.5 py-0 bg-accent text-accent-foreground animate-pulse">
+                      <Sparkles className="h-3 w-3 mr-0.5" />
+                      New
+                    </Badge>
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">{mission.subject} · {mission.time}</p>
               </div>
