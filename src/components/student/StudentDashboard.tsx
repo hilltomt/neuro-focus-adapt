@@ -96,7 +96,8 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
           {todayMissions.map((mission) => (
             <div
               key={mission.id}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+              onClick={() => navigate(`/assistant?task=${encodeURIComponent(mission.title)}`)}
+              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
                 mission.done
                   ? "bg-primary/5 border-primary/20 opacity-70"
                   : "bg-card border-border hover:border-primary/30"
@@ -117,6 +118,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
                 </p>
                 <p className="text-xs text-muted-foreground">{mission.subject} · {mission.time}</p>
               </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </div>
           ))}
         </CardContent>
