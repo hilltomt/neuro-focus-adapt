@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Fraunces"', 'serif'],
-        sans: ['"DM Sans"', 'sans-serif'],
+        display: ['"Nunito"', 'sans-serif'],
+        body: ['"Nunito Sans"', 'sans-serif'],
+        sans: ['"Nunito Sans"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -64,8 +65,11 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 8px)",
+        xl: "1.5rem",
+        "2xl": "1.5rem",
+        full: "9999px",
       },
       keyframes: {
         "accordion-down": {

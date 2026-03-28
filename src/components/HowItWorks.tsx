@@ -30,14 +30,14 @@ const HowItWorks = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive rounded-full px-4 py-1.5 text-sm font-bold font-display mb-6">
             <AlertTriangle className="h-4 w-4" />
             The Problem
           </div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight">
             The system is failing our most vulnerable students.
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-body">
             And it's costing everyone — teachers, families and municipalities.
           </p>
         </motion.div>
@@ -50,11 +50,11 @@ const HowItWorks = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
-              className="text-center p-6 rounded-2xl border border-border/60 bg-card"
+              className="text-center p-6 rounded-xl border border-border bg-card shadow-sm"
             >
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-3">{stat.value}</div>
-              <p className="text-muted-foreground leading-relaxed mb-3">{stat.description}</p>
-              <p className="text-xs text-muted-foreground/60 italic">{stat.source}</p>
+              <div className="text-4xl md:text-5xl font-black font-display text-primary mb-3">{stat.value}</div>
+              <p className="text-muted-foreground leading-relaxed mb-3 font-body">{stat.description}</p>
+              <p className="text-xs text-muted-foreground/60 italic font-body">{stat.source}</p>
             </motion.div>
           ))}
         </div>
