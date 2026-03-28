@@ -85,7 +85,7 @@ serve(async (req) => {
             visibility: 'unlisted',
             message: {
               content: contextMessage ? `${contextMessage}\n\n${message}` : message,
-              mentions: [{ configurationId: 'NeuroStudyBuddy' }],
+              mentions: [{ configurationId: 'XdmrVrLbc2' }],
               context: messageContext,
             },
             blocking: true,
@@ -121,7 +121,7 @@ serve(async (req) => {
         headers,
         body: JSON.stringify({
           content: message,
-          mentions: [{ configurationId: 'NeuroStudyBuddy' }],
+          mentions: [{ configurationId: 'XdmrVrLbc2' }],
           context: messageContext,
           blocking: true,
         }),
