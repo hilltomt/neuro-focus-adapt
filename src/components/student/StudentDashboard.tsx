@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, BookOpen, Target, Zap, Clock, ArrowRight, CheckCircle2, Star } from "lucide-react";
+import { Brain, BookOpen, Target, Zap, Clock, ArrowRight, CheckCircle2, Star, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +32,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
   const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const [adaptationCount, setAdaptationCount] = useState(0);
   const [missions, setMissions] = useState<Mission[]>(defaultMissions);
+  const [newestMissionId, setNewestMissionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -53,6 +55,7 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
           adapted_content: m.adapted_content,
         }));
         setMissions([...dbMissions, ...defaultMissions]);
+        setNewestMissionId(dbMissions[0]?.id || null);
       }
     };
     fetchData();
@@ -138,6 +141,12 @@ const StudentDashboard = ({ onSectionChange }: StudentDashboardProps) => {
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${mission.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                   {mission.title}
+                  {mission.id === newestMissionId && !mission.done && (
+                    <Badge variant="default" className="ml-2 text-[10px] px-1.5 py-0 bg-accent text-accent-foreground animate-pulse">
+                      <Sparkles className="h-3 w-3 mr-0.5" />
+                      New
+                    </Badge>
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">{mission.subject} · {mission.time}</p>
               </div>
