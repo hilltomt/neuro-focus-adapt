@@ -298,6 +298,38 @@ const SubjectDetails = () => {
                   ))}
                 </TabsContent>
               </Tabs>
+
+              {/* Lesson Files */}
+              {lessonFiles.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    Lesson Files
+                  </h3>
+                  <div className="space-y-2">
+                    {lessonFiles.map((file) => (
+                      <a
+                        key={file.id}
+                        href={file.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all"
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FileText className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(file.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Download className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </main>
         </div>
