@@ -291,6 +291,7 @@ const Assistant = () => {
               {showRoadmap ? (
                 <StudySessionBoard
                   taskTitle={currentTaskTitle || "Study Session"}
+                  taskId={activeTaskId}
                   onBack={() => setShowRoadmap(false)}
                 />
               ) : (
