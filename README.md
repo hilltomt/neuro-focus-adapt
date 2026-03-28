@@ -1,5 +1,7 @@
 # NEURO
 
+**Live demo:** [https://neuroadapttool.lovable.app/](https://neuroadapttool.lovable.app/)
+
 A web application that helps teachers adapt learning materials for neurodiverse students. Built with React + Vite and powered by Supabase and the Dust AI platform.
 
 ## Tech Stack
