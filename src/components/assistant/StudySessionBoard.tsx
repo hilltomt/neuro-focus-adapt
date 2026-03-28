@@ -20,6 +20,7 @@ interface ChatMessage {
 
 interface StudySessionBoardProps {
   taskTitle: string;
+  taskId: string;
   onBack: () => void;
 }
 
