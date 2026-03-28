@@ -334,7 +334,7 @@ const Assistant = () => {
                     </div>
 
                     {/* Chat messages */}
-                    {messages.map((msg) => (
+                    {currentMessages.map((msg) => (
                       <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
                         {msg.role === "ai" && (
                           <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
