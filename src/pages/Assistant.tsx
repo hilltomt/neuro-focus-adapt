@@ -104,7 +104,7 @@ const Assistant = () => {
   const currentConversationId = activeTaskId ? (conversationIds[activeTaskId] || null) : null;
 
   const greeting = currentTaskTitle
-    ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
+    ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. Which part do you want to smash first?`
     : "Hi Lucas! 👋 I'm your AI learning assistant. Launch a task from My Subjects to get started!";
 
   useEffect(() => {
