@@ -79,12 +79,49 @@ const SubjectDetails = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [dbTasks, setDbTasks] = useState<Task[]>([]);
 
   const displayName = subjectName
     ? subjectName.charAt(0).toUpperCase() + subjectName.slice(1).replace(/-/g, " ")
     : "Subject";
 
-  const tasks = (subjectName && mockTasks[subjectName.toLowerCase()]) || defaultTasks;
+  const baseTasks = (subjectName && mockTasks[subjectName.toLowerCase()]) || defaultTasks;
+
+  // Fetch DB missions matching this subject and merge into "current" tasks
+  useEffect(() => {
+    if (!subjectName) return;
+    const fetchMissions = async () => {
+      const { data } = await supabase
+        .from("student_missions")
+        .select("*")
+        .ilike("subject", subjectName)
+        .eq("done", false)
+        .order("created_at", { ascending: false });
+      if (data && data.length > 0) {
+        // Deduplicate by title
+        const seen = new Set<string>();
+        const missions: Task[] = [];
+        for (const m of data) {
+          if (!seen.has(m.title)) {
+            seen.add(m.title);
+            missions.push({
+              id: m.id,
+              title: m.title,
+              time: m.estimated_time || undefined,
+              description: m.adapted_content || m.description || "",
+            });
+          }
+        }
+        setDbTasks(missions);
+      }
+    };
+    fetchMissions();
+  }, [subjectName]);
+
+  const tasks = {
+    ...baseTasks,
+    current: [...dbTasks, ...baseTasks.current],
+  };
 
   const handleSignOut = async () => {
     await signOut();
