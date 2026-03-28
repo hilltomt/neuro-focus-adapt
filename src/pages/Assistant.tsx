@@ -75,6 +75,7 @@ const Assistant = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const taskTitle = searchParams.get("task");
+  const focusMode = searchParams.get("focus") === "true";
 
   const [ongoingTasks, setOngoingTasks] = useState<OngoingTask[]>(() => {
     const stored = loadTasksFromStorage();
@@ -202,7 +203,7 @@ const Assistant = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        {!showRoadmap && (
+        {!showRoadmap && !focusMode && (
           <DashboardSidebar
             activeSection="ai-assistant"
             onSectionChange={(section) => {
