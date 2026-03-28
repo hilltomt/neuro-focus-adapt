@@ -81,7 +81,8 @@ const Assistant = () => {
         <DashboardSidebar
           activeSection="ai-assistant"
           onSectionChange={(section) => {
-            if (section === "dashboard") navigate("/dashboard");
+            if (section === "ai-assistant") navigate("/assistant");
+            else if (section === "dashboard") navigate("/dashboard");
             else navigate(`/dashboard?section=${section}`);
           }}
           onSignOut={handleSignOut}

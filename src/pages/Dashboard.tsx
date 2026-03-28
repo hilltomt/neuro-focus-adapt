@@ -24,6 +24,14 @@ const Dashboard = () => {
     if (section) setActiveSection(section);
   }, [searchParams]);
 
+  const handleSectionChange = (section: string) => {
+    if (section === "ai-assistant") {
+      navigate("/assistant");
+      return;
+    }
+    setActiveSection(section);
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -44,7 +52,7 @@ const Dashboard = () => {
       case "settings":
         return <DashboardSettings embedded />;
       default:
-        return <StudentDashboard onSectionChange={setActiveSection} />;
+        return <StudentDashboard onSectionChange={handleSectionChange} />;
     }
   };
 
@@ -53,7 +61,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar
           activeSection={activeSection}
-          onSectionChange={setActiveSection}
+          onSectionChange={handleSectionChange}
           onSignOut={handleSignOut}
         />
         <div className="flex-1 flex flex-col min-w-0">
