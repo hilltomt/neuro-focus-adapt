@@ -1,15 +1,30 @@
+import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Brain, MessageSquare, Sparkles, ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
+  ListChecks, BookOpen, HelpCircle, MessageSquare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import StudySessionBoard from "@/components/assistant/StudySessionBoard";
+
+const ongoingTasks = [
+  { id: "fractions", title: "Math: Fractions Worksheet", active: true },
+  { id: "vikings", title: "History: Viking Essay", active: false },
+  { id: "science", title: "Science Quiz", active: false },
+  { id: "reading", title: "English: Reading Comprehension", active: false },
+];
 
 const Assistant = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const [chatInput, setChatInput] = useState("");
+  const [showRoadmap, setShowRoadmap] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState("fractions");
 
   const taskTitle = searchParams.get("task");
 
@@ -20,6 +35,15 @@ const Assistant = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleSwitchTask = (taskId: string) => {
+    setActiveTaskId(taskId);
+    setShowRoadmap(false);
+    const task = ongoingTasks.find((t) => t.id === taskId);
+    if (task) {
+      navigate(`/assistant?task=${encodeURIComponent(task.title)}`, { replace: true });
+    }
   };
 
   return (
@@ -37,80 +61,126 @@ const Assistant = () => {
           <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-card/80 backdrop-blur-sm border-b border-border/50">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="mr-1" />
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-accent" />
+                  AI Assistant
+                </h2>
+              </div>
             </div>
           </header>
-          <main className="flex-1 p-4 sm:p-6 max-w-5xl mx-auto w-full">
-            <div className="space-y-6 animate-fade-up">
-              {/* Header */}
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-accent" />
-                    AI Assistant
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Your personal learning companion — powered by AI.
-                  </p>
+
+          <div className="flex-1 flex min-h-0">
+            {/* Left Task Sidebar */}
+            <aside className="hidden md:flex w-[25%] min-w-[220px] max-w-[280px] flex-col border-r border-border/50 bg-card/50">
+              <div className="px-4 py-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  My Ongoing Tasks
+                </h3>
+                <div className="space-y-1">
+                  {ongoingTasks.map((task) => (
+                    <button
+                      key={task.id}
+                      onClick={() => handleSwitchTask(task.id)}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
+                        activeTaskId === task.id
+                          ? "bg-primary/10 text-primary font-medium border border-primary/20"
+                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                      }`}
+                    >
+                      <span className="line-clamp-1">{task.title}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
+            </aside>
 
-              {/* Chat area */}
-              <Card className="border border-border bg-card">
-                <CardContent className="p-6 min-h-[400px] flex flex-col">
-                  {/* AI greeting bubble */}
-                  <div className="flex gap-3 mb-6">
-                    <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                      <Sparkles className="h-4 w-4 text-accent" />
+            {/* Right Main Area */}
+            <main className="flex-1 flex flex-col min-w-0">
+              {showRoadmap ? (
+                <StudySessionBoard
+                  taskTitle={taskTitle || "Math: Fractions Worksheet"}
+                  onBack={() => setShowRoadmap(false)}
+                />
+              ) : (
+                <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-3xl mx-auto w-full">
+                  {/* Chat messages area */}
+                  <div className="flex-1 space-y-4 animate-fade-up">
+                    {/* AI greeting bubble */}
+                    <div className="flex gap-3">
+                      <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Sparkles className="h-4 w-4 text-accent" />
+                      </div>
+                      <div className="bg-accent/5 border border-accent/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-lg">
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {greeting.split("**").map((part, i) =>
+                            i % 2 === 1 ? (
+                              <span key={i} className="font-semibold text-accent">{part}</span>
+                            ) : (
+                              part
+                            )
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <div className="bg-accent/5 border border-accent/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-lg">
-                      <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
-                        {greeting.split("**").map((part, i) =>
-                          i % 2 === 1 ? (
-                            <span key={i} className="font-semibold text-accent">
-                              {part}
-                            </span>
-                          ) : (
-                            part
-                          )
-                        )}
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Spacer */}
-                  <div className="flex-1" />
-
-                  {/* Quick prompts */}
-                  <div className="flex flex-wrap gap-2 justify-center mt-4">
-                    {[
-                      "Break it into steps",
-                      "Explain simply",
-                      "Quiz me on this",
-                      "Give me a summary",
-                    ].map((prompt) => (
+                    {/* Quick action buttons */}
+                    <div className="flex flex-wrap gap-2 pl-12">
                       <Button
-                        key={prompt}
                         variant="outline"
                         size="sm"
-                        className="text-xs opacity-50 cursor-not-allowed"
-                        disabled
+                        className="text-xs rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+                        onClick={() => setShowRoadmap(true)}
                       >
-                        <MessageSquare className="h-3 w-3 mr-1" />
-                        {prompt}
+                        <ListChecks className="h-3.5 w-3.5 mr-1.5" />
+                        Break it into steps
                       </Button>
-                    ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs rounded-full border-border"
+                      >
+                        <BookOpen className="h-3.5 w-3.5 mr-1.5" />
+                        Explain simply
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs rounded-full border-border"
+                      >
+                        <HelpCircle className="h-3.5 w-3.5 mr-1.5" />
+                        Quiz me on this
+                      </Button>
+                    </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground/60 text-center mt-3">
-                    Dust agent integration — pending setup
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </main>
+                  {/* Floating chat input */}
+                  <div className="pt-4 pb-2">
+                    <div className="flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2 shadow-sm">
+                      <Input
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ask anything about this task…"
+                        className="border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm placeholder:text-muted-foreground/60 px-0"
+                      />
+                      <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        <SendHorizonal className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
+                      AI assistant — Dust agent integration pending
+                    </p>
+                  </div>
+                </div>
+              )}
+            </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
