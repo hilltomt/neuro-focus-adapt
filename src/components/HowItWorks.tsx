@@ -1,27 +1,27 @@
 import { motion } from "framer-motion";
-import { Upload, Wand2, CheckCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
-const steps = [
+const stats = [
   {
-    icon: Upload,
-    title: "Paste your content",
-    description: "Drop in any lesson plan, worksheet, or reading material you need to adapt.",
+    value: "82%",
+    description: "of teachers say they don't have enough time to properly support students with extra needs.",
+    source: "Skolverket, 2019",
   },
   {
-    icon: Wand2,
-    title: "Choose adaptations",
-    description: "Select ADHD-friendly strategies: chunking, visual cues, simplified language, and more.",
+    value: "51%",
+    description: "of schools admit that students with NDD diagnoses are NOT getting the support they are legally entitled to.",
+    source: "Licensierat Riksförbundet",
   },
   {
-    icon: CheckCircle,
-    title: "Get adapted material",
-    description: "Receive ready-to-use content formatted to reduce cognitive load and boost engagement.",
+    value: "15M SEK",
+    description: "the lifetime societal cost of one student who drops out due to lack of support.",
+    source: "Skandia Idéer för livet",
   },
 ];
 
 const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="py-20 md:py-32">
+    <section id="the-problem" className="py-20 md:py-32">
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -30,30 +30,31 @@ const HowItWorks = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
+          <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            The Problem
+          </div>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Three steps to inclusive content
+            The system is failing our most vulnerable students.
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            No special training required. Just paste, adapt, and teach.
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            And it's costing everyone — teachers, families and municipalities.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {steps.map((step, index) => (
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {stats.map((stat, index) => (
             <motion.div
-              key={step.title}
+              key={stat.value}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
-              className="text-center group"
+              className="text-center p-6 rounded-2xl border border-border/60 bg-card"
             >
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary/20 transition-colors">
-                <step.icon className="h-7 w-7 text-primary" />
-              </div>
-              <div className="text-sm font-semibold text-accent mb-2">Step {index + 1}</div>
-              <h3 className="font-display text-xl font-semibold text-foreground mb-2">{step.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-3">{stat.value}</div>
+              <p className="text-muted-foreground leading-relaxed mb-3">{stat.description}</p>
+              <p className="text-xs text-muted-foreground/60 italic">{stat.source}</p>
             </motion.div>
           ))}
         </div>

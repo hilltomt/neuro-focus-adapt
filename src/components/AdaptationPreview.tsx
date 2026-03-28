@@ -1,10 +1,18 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+
+const comparisons = [
+  { before: "Teachers buried in paperwork.", after: "Teachers plan efficiently with structured overviews of every student's needs." },
+  { before: "Students sit unsupported in class.", after: "Students have a clear, calm view of their schedule and materials." },
+  { before: "Parents wait weeks for updates.", after: "Parents see progress in real time." },
+  { before: "Communication scattered across emails, calls and texts.", after: "Everyone communicates in one place." },
+  { before: "No clear picture of progress.", after: "Data-driven insights on every student's journey." },
+];
 
 const AdaptationPreview = () => {
   return (
-    <section id="adapt" className="py-20 md:py-32">
+    <section id="solution" className="py-20 md:py-32">
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -17,7 +25,7 @@ const AdaptationPreview = () => {
             See the difference
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            A side-by-side look at how NEURO transforms content.
+            From overwhelm to clarity — for everyone involved.
           </p>
         </motion.div>
 
@@ -30,42 +38,31 @@ const AdaptationPreview = () => {
         >
           {/* Before */}
           <Card className="p-6 bg-card border-border/60">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Original Content
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-5">
+              Before Neuro
             </div>
-            <div className="text-sm text-foreground leading-relaxed space-y-3">
-              <p>
-                Read Chapter 5 about the water cycle, including evaporation, condensation, and precipitation. 
-                Then answer the comprehension questions on pages 47-49. Make sure to include examples from 
-                the text in your answers and write at least three complete sentences for each question. 
-                Submit your work by Friday.
-              </p>
+            <div className="space-y-4">
+              {comparisons.map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground leading-relaxed">{item.before}</p>
+                </div>
+              ))}
             </div>
           </Card>
 
-
           {/* After */}
           <Card className="p-6 bg-primary/5 border-primary/20">
-            <div className="text-xs font-semibold text-primary uppercase tracking-wider mb-4 flex items-center gap-1">
-              <ArrowRight className="h-3 w-3" /> NEURO Adapted
+            <div className="text-xs font-semibold text-primary uppercase tracking-wider mb-5">
+              With Neuro
             </div>
-            <div className="text-sm text-foreground leading-relaxed space-y-3">
-              <div className="flex items-start gap-2">
-                <span className="bg-primary/20 text-primary text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mt-0.5 shrink-0">1</span>
-                <p>📖 Read <strong>Chapter 5: The Water Cycle</strong> <span className="text-muted-foreground">(~15 min)</span></p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="bg-primary/20 text-primary text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mt-0.5 shrink-0">2</span>
-                <p>🔍 Focus on 3 key terms: <strong>evaporation</strong>, <strong>condensation</strong>, <strong>precipitation</strong></p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="bg-primary/20 text-primary text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mt-0.5 shrink-0">3</span>
-                <p>✍️ Answer questions on p. 47-49 <span className="text-muted-foreground">(3 sentences each, use text examples)</span></p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="bg-accent/20 text-accent text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mt-0.5 shrink-0">!</span>
-                <p>📅 <strong>Due: Friday</strong></p>
-              </div>
+            <div className="space-y-4">
+              {comparisons.map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground leading-relaxed">{item.after}</p>
+                </div>
+              ))}
             </div>
           </Card>
         </motion.div>
