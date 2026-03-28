@@ -69,7 +69,7 @@ const Dashboard = () => {
       case "schedule":
         return <TeacherScheduleManager />;
       case "adapt":
-        return <Adapt embedded />;
+        return <TeacherAdaptContent />;
       case "journals":
         return <TeacherJournals />;
       case "settings":
