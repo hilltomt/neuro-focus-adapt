@@ -93,7 +93,6 @@ const Assistant = () => {
 
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
-  const [showTaskSidebar, setShowTaskSidebar] = useState(!taskTitle);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
   const [messagesByTask, setMessagesByTask] = useState<Record<string, ChatMessage[]>>(loadMessagesByTask);
   const [conversationIds, setConversationIds] = useState<Record<string, string>>(loadConversationIds);
@@ -230,7 +229,7 @@ const Assistant = () => {
 
           <div className="flex-1 flex min-h-0">
             {/* Left Task Sidebar — hidden during study session */}
-            {!showRoadmap && showTaskSidebar && (
+            {!showRoadmap && (
             <aside className="hidden md:flex w-[25%] min-w-[220px] max-w-[280px] flex-col border-r border-border/50 bg-card/50">
               <div className="px-4 py-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
