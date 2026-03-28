@@ -17,7 +17,7 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
-            <a href="/dashboard">Request a demo</a>
+            <a href="/dashboard">Go to Dashboard</a>
           </Button>
           <Button size="sm" asChild>
             <a href="#waitlist">Join waitlist</a>
