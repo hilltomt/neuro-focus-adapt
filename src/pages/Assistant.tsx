@@ -17,6 +17,13 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import StudySessionBoard from "@/components/assistant/StudySessionBoard";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "ai";
+  text: string;
+}
 
 interface OngoingTask {
   id: string;
