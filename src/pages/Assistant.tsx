@@ -55,9 +55,11 @@ const Assistant = () => {
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
 
-  const greeting = taskTitle
-    ? `Hi Lucas! 👋 I see we need to tackle **${taskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
-    : "Hi Lucas! 👋 I'm your AI learning assistant. Pick a task or ask me anything!";
+  const currentTaskTitle = activeTask?.title ?? taskTitle;
+
+  const greeting = currentTaskTitle
+    ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
+    : "Hi Lucas! 👋 I'm your AI learning assistant. Launch a task from My Subjects to get started!";
 
   const handleSignOut = async () => {
     await signOut();
