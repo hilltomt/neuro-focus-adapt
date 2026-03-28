@@ -100,6 +100,8 @@ const SubjectDetails = () => {
             else navigate(`/dashboard?section=${section}`);
           }}
           onSignOut={handleSignOut}
+          activeRole="student"
+          onRoleChange={() => {}}
         />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="flex items-center justify-between px-4 sm:px-6 py-3 bg-card/80 backdrop-blur-sm border-b border-border/50">
