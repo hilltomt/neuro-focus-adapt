@@ -98,6 +98,17 @@ const TeacherScheduleManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Standalone upload state
+  const [standaloneSubject, setStandaloneSubject] = useState("");
+  const [standaloneClass, setStandaloneClass] = useState("");
+  const [standaloneUploading, setStandaloneUploading] = useState(false);
+  const [standaloneFiles, setStandaloneFiles] = useState<{ name: string; url: string }[]>([]);
+  const standaloneFileRef = useRef<HTMLInputElement>(null);
+
+  // Get unique subjects and classes from schedule
+  const allSubjects = [...new Set(scheduleData.flatMap((d) => d.lessons.map((l) => l.subject)))];
+  const allClasses = [...new Set(scheduleData.flatMap((d) => d.lessons.map((l) => l.class)))];
+
   const handleLessonClick = (lesson: ScheduleLesson, day: string) => {
     setSelectedLesson({ ...lesson, day });
     setLessonText(lesson.description || "");
@@ -155,6 +166,54 @@ const TeacherScheduleManager = () => {
 
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleStandaloneUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !user) return;
+    if (!standaloneSubject || !standaloneClass) {
+      toast.error("Please select a subject and class first");
+      return;
+    }
+
+    setStandaloneUploading(true);
+    const newFiles: { name: string; url: string }[] = [];
+
+    for (const file of Array.from(files)) {
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage
+        .from("lesson-files")
+        .upload(filePath, file);
+
+      if (error) {
+        toast.error(`Failed to upload ${file.name}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("lesson-files")
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from("lesson_files" as any).insert({
+        teacher_user_id: user.id,
+        subject: standaloneSubject,
+        class: standaloneClass,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+      });
+
+      if (dbError) {
+        toast.error(`Failed to save ${file.name}`);
+        continue;
+      }
+
+      newFiles.push({ name: file.name, url: urlData.publicUrl });
+    }
+
+    setStandaloneFiles((prev) => [...prev, ...newFiles]);
+    if (newFiles.length > 0) toast.success(`${newFiles.length} file(s) uploaded to ${standaloneSubject} — ${standaloneClass}`);
+    setStandaloneUploading(false);
+    if (standaloneFileRef.current) standaloneFileRef.current.value = "";
   };
 
   const handleClose = () => {
@@ -361,7 +420,92 @@ Return ONLY the JSON, no markdown fences or extra text.`,
         </div>
       </div>
 
-      {/* Lesson Adaptation Dialog */}
+      {/* Upload Files to Class */}
+      <div>
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-3">
+          <Upload className="h-5 w-5 text-primary" />
+          Upload Files to Class
+        </h2>
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-sm text-muted-foreground">Subject</Label>
+                <Select value={standaloneSubject} onValueChange={setStandaloneSubject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allSubjects.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm text-muted-foreground">Class</Label>
+                <Select value={standaloneClass} onValueChange={setStandaloneClass}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allClasses.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <input
+              ref={standaloneFileRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.pptx,.xlsx"
+              onChange={handleStandaloneUpload}
+              className="hidden"
+            />
+            <div
+              onClick={() => {
+                if (!standaloneSubject || !standaloneClass) {
+                  toast.error("Please select a subject and class first");
+                  return;
+                }
+                standaloneFileRef.current?.click();
+              }}
+              className="flex items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed border-border hover:border-primary/30 bg-muted/30 cursor-pointer transition-colors"
+            >
+              {standaloneUploading ? (
+                <p className="text-sm text-muted-foreground">Uploading...</p>
+              ) : (
+                <>
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Click to upload files (PDF, DOC, images, PPT, Excel)</p>
+                </>
+              )}
+            </div>
+
+            {standaloneFiles.length > 0 && (
+              <div className="space-y-2">
+                {standaloneFiles.map((file, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card">
+                    <FileText className="h-4 w-4 text-primary shrink-0" />
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-foreground hover:text-primary truncate flex-1"
+                    >
+                      {file.name}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Dialog open={!!selectedLesson} onOpenChange={(open) => !open && handleClose()}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
