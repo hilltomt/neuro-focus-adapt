@@ -294,7 +294,7 @@ const SubjectDetails = () => {
               size="lg"
               onClick={() => {
                 if (selectedTask) {
-                  navigate(`/assistant?task=${encodeURIComponent(selectedTask.title)}`);
+                  navigate(`/assistant?task=${encodeURIComponent(selectedTask.title)}&focus=true`);
                 }
               }}
             >
