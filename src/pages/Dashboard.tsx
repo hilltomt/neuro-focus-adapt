@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Brain, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,13 @@ import DashboardSettings from "@/pages/DashboardSettings";
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState(searchParams.get("section") || "dashboard");
+
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section) setActiveSection(section);
+  }, [searchParams]);
 
   const handleSignOut = async () => {
     await signOut();

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { BookOpen } from "lucide-react";
 
 const subjectGroups = [
@@ -22,6 +23,7 @@ const subjectGroups = [
 ];
 
 const SubjectsView = () => {
+  const navigate = useNavigate();
   return (
     <div className="space-y-6 animate-fade-up">
       <div>
@@ -42,6 +44,7 @@ const SubjectsView = () => {
               <div
                 key={subject.id}
                 className="p-4 rounded-xl bg-card border border-border space-y-3 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
+                onClick={() => navigate(`/subject/${subject.id}`)}
               >
                 <h4 className="font-semibold text-sm text-foreground">{subject.name}</h4>
                 <div className="w-full h-2 rounded-full bg-muted overflow-hidden">

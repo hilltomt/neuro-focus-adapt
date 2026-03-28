@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Adapt from "./pages/Adapt.tsx";
 import AdaptHistory from "./pages/AdaptHistory.tsx";
 import DashboardSettings from "./pages/DashboardSettings.tsx";
+import SubjectDetails from "./pages/SubjectDetails.tsx";
+import Assistant from "./pages/Assistant.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/dashboard/adapt" element={<ProtectedRoute><Adapt /></ProtectedRoute>} />
             <Route path="/dashboard/history" element={<ProtectedRoute><AdaptHistory /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
+            <Route path="/subject/:subjectName" element={<ProtectedRoute><SubjectDetails /></ProtectedRoute>} />
+            <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
