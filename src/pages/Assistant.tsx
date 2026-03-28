@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Brain, Sparkles, ArrowLeft, Mic, SendHorizonal,
-  ListChecks, BookOpen, HelpCircle, MessageSquare, MoreVertical, Trash2,
+  ListChecks, BookOpen, HelpCircle, MessageSquare, MoreVertical, Trash2, Loader2, User,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,13 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import StudySessionBoard from "@/components/assistant/StudySessionBoard";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "ai";
+  text: string;
+}
 
 interface OngoingTask {
   id: string;
@@ -60,12 +68,53 @@ const Assistant = () => {
   const [chatInput, setChatInput] = useState("");
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(activeTask?.id ?? "");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentTaskTitle = activeTask?.title ?? taskTitle;
 
   const greeting = currentTaskTitle
     ? `Hi Lucas! 👋 I see we need to tackle **${currentTaskTitle}**. I've prepared a nonlinear roadmap for you. Which part do you want to smash first?`
     : "Hi Lucas! 👋 I'm your AI learning assistant. Launch a task from My Subjects to get started!";
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMainChat = async () => {
+    const text = chatInput.trim();
+    if (!text || isLoading) return;
+
+    const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
+    setMessages((prev) => [...prev, userMsg]);
+    setChatInput("");
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('dust-chat', {
+        body: { message: text, conversationId, context: currentTaskTitle },
+      });
+      if (error) throw error;
+      if (data?.conversationId) setConversationId(data.conversationId);
+      const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: data?.reply || "Let me think about that..." };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: "Sorry, I had trouble connecting. Please try again! 🔄" };
+      setMessages((prev) => [...prev, aiMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChatKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMainChat();
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -192,7 +241,7 @@ const Assistant = () => {
               ) : (
                 <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-3xl mx-auto w-full">
                   {/* Chat messages area */}
-                  <div className="flex-1 space-y-4 animate-fade-up">
+                  <div className="flex-1 space-y-4 animate-fade-up overflow-y-auto">
                     {/* AI greeting bubble */}
                     <div className="flex gap-3">
                       <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -239,6 +288,54 @@ const Assistant = () => {
                         Quiz me on this
                       </Button>
                     </div>
+
+                    {/* Chat messages */}
+                    {messages.map((msg) => (
+                      <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
+                        {msg.role === "ai" && (
+                          <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <Sparkles className="h-4 w-4 text-accent" />
+                          </div>
+                        )}
+                        <div
+                          className={`rounded-2xl px-4 py-3 max-w-[85%] ${
+                            msg.role === "user"
+                              ? "bg-primary text-primary-foreground rounded-tr-sm"
+                              : "bg-accent/5 border border-accent/20 rounded-tl-sm"
+                          }`}
+                        >
+                          {msg.role === "ai" ? (
+                            <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+                              <ReactMarkdown>{msg.text}</ReactMarkdown>
+                            </div>
+                          ) : (
+                            <p className="text-sm leading-relaxed">{msg.text}</p>
+                          )}
+                        </div>
+                        {msg.role === "user" && (
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Loading indicator */}
+                    {isLoading && (
+                      <div className="flex gap-3">
+                        <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <Sparkles className="h-4 w-4 text-accent" />
+                        </div>
+                        <div className="bg-accent/5 border border-accent/20 rounded-2xl rounded-tl-sm px-4 py-3">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Thinking...
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div ref={chatEndRef} />
                   </div>
 
                   {/* Floating chat input */}
@@ -247,18 +344,25 @@ const Assistant = () => {
                       <Input
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={handleChatKeyDown}
                         placeholder="Ask anything about this task…"
                         className="border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm placeholder:text-muted-foreground/60 px-0"
+                        disabled={isLoading}
                       />
                       <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
                         <Mic className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                        <SendHorizonal className="h-4 w-4" />
+                      <Button
+                        size="icon"
+                        onClick={handleSendMainChat}
+                        disabled={isLoading}
+                        className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
                       </Button>
                     </div>
                     <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
-                      AI assistant — Dust agent integration pending
+                      Powered by NeuroStudyBuddy — your ADHD-friendly study assistant
                     </p>
                   </div>
                 </div>

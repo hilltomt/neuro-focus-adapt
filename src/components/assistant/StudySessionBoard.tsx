@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { CheckCircle2, Circle, Sparkles, SendHorizonal, Mic, ArrowLeft, User } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { CheckCircle2, Circle, Sparkles, SendHorizonal, Mic, ArrowLeft, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import ReactMarkdown from "react-markdown";
 
 interface Step {
   id: string;
@@ -20,14 +22,6 @@ interface StudySessionBoardProps {
   taskTitle: string;
   onBack: () => void;
 }
-
-const mockedAIResponses = [
-  "Good start! Try breaking down the denominators first. What's the least common multiple? 🤔",
-  "You're on the right track! Remember, to add fractions you need a common denominator. Keep going! 💪",
-  "Great question! Think of it like pizza slices — if one pizza is cut into 4 and another into 6, how do you compare? 🍕",
-  "Almost there! Simplify by finding the GCD of the numerator and denominator. You've got this! ✨",
-  "That's a smart approach! Try writing it out step by step — it really helps with fractions. 📝",
-];
 
 const generateSteps = (taskTitle: string): Step[] => {
   const lower = taskTitle.toLowerCase();
@@ -56,7 +50,8 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
   const [steps, setSteps] = useState<Step[]>(() => generateSteps(taskTitle));
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [responseIndex, setResponseIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const completedCount = steps.filter((s) => s.status === "completed").length;
@@ -66,20 +61,43 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const sendMessageToDust = useCallback(async (text: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('dust-chat', {
+        body: {
+          message: text,
+          conversationId,
+          context: taskTitle,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.conversationId) {
+        setConversationId(data.conversationId);
+      }
+
+      return data?.reply || "I'm thinking... could you try again?";
+    } catch (err) {
+      console.error('Dust chat error:', err);
+      return "Sorry, I had trouble connecting. Please try again! 🔄";
+    } finally {
+      setIsLoading(false);
+    }
+  }, [conversationId, taskTitle]);
+
+  const handleSendMessage = async () => {
     const text = chatInput.trim();
-    if (!text) return;
+    if (!text || isLoading) return;
 
     const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
-    const aiMsg: ChatMessage = {
-      id: `ai-${Date.now()}`,
-      role: "ai",
-      text: mockedAIResponses[responseIndex % mockedAIResponses.length],
-    };
-
-    setMessages((prev) => [...prev, userMsg, aiMsg]);
-    setResponseIndex((i) => i + 1);
+    setMessages((prev) => [...prev, userMsg]);
     setChatInput("");
+
+    const reply = await sendMessageToDust(text);
+    const aiMsg: ChatMessage = { id: `ai-${Date.now()}`, role: "ai", text: reply };
+    setMessages((prev) => [...prev, aiMsg]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -179,7 +197,13 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
                       : "bg-accent/5 border border-accent/20 rounded-tl-sm"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
+                  {msg.role === "ai" ? (
+                    <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">{msg.text}</p>
+                  )}
                 </div>
                 {msg.role === "user" && (
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -188,6 +212,22 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
                 )}
               </div>
             ))}
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="h-4 w-4 text-accent" />
+                </div>
+                <div className="bg-accent/5 border border-accent/20 rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Thinking...
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={chatEndRef} />
           </div>
 
@@ -200,6 +240,7 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about this step…"
                 className="border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm placeholder:text-muted-foreground/60 px-0"
+                disabled={isLoading}
               />
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
                 <Mic className="h-4 w-4" />
@@ -207,9 +248,10 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
               <Button
                 size="icon"
                 onClick={handleSendMessage}
+                disabled={isLoading}
                 className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                <SendHorizonal className="h-4 w-4" />
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
               </Button>
             </div>
           </div>
