@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Nunito"', 'sans-serif'],
+        display: ['"Recoleta"', 'serif'],
         body: ['"Nunito Sans"', 'sans-serif'],
         sans: ['"Nunito Sans"', 'sans-serif'],
       },
