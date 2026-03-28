@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CheckCircle2, Circle, Sparkles, SendHorizonal, Mic, ArrowLeft } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { CheckCircle2, Circle, Sparkles, SendHorizonal, Mic, ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -10,10 +10,24 @@ interface Step {
   status: "default" | "active" | "completed";
 }
 
+interface ChatMessage {
+  id: string;
+  role: "user" | "ai";
+  text: string;
+}
+
 interface StudySessionBoardProps {
   taskTitle: string;
   onBack: () => void;
 }
+
+const mockedAIResponses = [
+  "Good start! Try breaking down the denominators first. What's the least common multiple? 🤔",
+  "You're on the right track! Remember, to add fractions you need a common denominator. Keep going! 💪",
+  "Great question! Think of it like pizza slices — if one pizza is cut into 4 and another into 6, how do you compare? 🍕",
+  "Almost there! Simplify by finding the GCD of the numerator and denominator. You've got this! ✨",
+  "That's a smart approach! Try writing it out step by step — it really helps with fractions. 📝",
+];
 
 const generateSteps = (taskTitle: string): Step[] => {
   const lower = taskTitle.toLowerCase();
@@ -41,9 +55,39 @@ const generateSteps = (taskTitle: string): Step[] => {
 const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
   const [steps, setSteps] = useState<Step[]>(() => generateSteps(taskTitle));
   const [chatInput, setChatInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [responseIndex, setResponseIndex] = useState(0);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const completedCount = steps.filter((s) => s.status === "completed").length;
   const progress = Math.round((completedCount / steps.length) * 100);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    const text = chatInput.trim();
+    if (!text) return;
+
+    const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: "user", text };
+    const aiMsg: ChatMessage = {
+      id: `ai-${Date.now()}`,
+      role: "ai",
+      text: mockedAIResponses[responseIndex % mockedAIResponses.length],
+    };
+
+    setMessages((prev) => [...prev, userMsg, aiMsg]);
+    setResponseIndex((i) => i + 1);
+    setChatInput("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   const handleStepClick = (stepId: string) => {
     setSteps((prev) =>
@@ -119,6 +163,32 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
                 </p>
               </div>
             </div>
+
+            {/* Chat messages */}
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
+                {msg.role === "ai" && (
+                  <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                  </div>
+                )}
+                <div
+                  className={`rounded-2xl px-4 py-3 max-w-[85%] ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-tr-sm"
+                      : "bg-accent/5 border border-accent/20 rounded-tl-sm"
+                  }`}
+                >
+                  <p className="text-sm leading-relaxed">{msg.text}</p>
+                </div>
+                {msg.role === "user" && (
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
           </div>
 
           {/* Chat input */}
@@ -127,13 +197,18 @@ const StudySessionBoard = ({ taskTitle, onBack }: StudySessionBoardProps) => {
               <Input
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask about this step…"
                 className="border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm placeholder:text-muted-foreground/60 px-0"
               />
               <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
                 <Mic className="h-4 w-4" />
               </Button>
-              <Button size="icon" className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                size="icon"
+                onClick={handleSendMessage}
+                className="shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 <SendHorizonal className="h-4 w-4" />
               </Button>
             </div>
